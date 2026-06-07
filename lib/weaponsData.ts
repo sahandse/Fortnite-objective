@@ -1,0 +1,315 @@
+export interface Weapon {
+  id: string;
+  nameFa: string;
+  nameEn: string;
+  category: WeaponCategory;
+  rarity: "common" | "uncommon" | "rare" | "epic" | "legendary";
+  damage: number;
+  dps: number;
+  fireRate: number;
+  magazineSize: number;
+  reloadTime: number;
+  range: "کوتاه" | "متوسط" | "بلند" | "خیلی بلند";
+  tier: "S" | "A" | "B" | "C" | "D";
+  emoji: string;
+  description: string;
+}
+
+export type WeaponCategory =
+  | "assault"
+  | "shotgun"
+  | "smg"
+  | "sniper"
+  | "pistol"
+  | "explosive"
+  | "melee"
+  | "special";
+
+export const WEAPON_CATEGORIES: Record<WeaponCategory, { labelFa: string; icon: string; color: string }> = {
+  assault:   { labelFa: "تفنگ تهاجمی", icon: "🔫", color: "#3b82f6" },
+  shotgun:   { labelFa: "شاتگان",       icon: "💥", color: "#f59e0b" },
+  smg:       { labelFa: "SMG",           icon: "⚡", color: "#22c55e" },
+  sniper:    { labelFa: "تک‌تیرانداز",  icon: "🎯", color: "#06b6d4" },
+  pistol:    { labelFa: "پیستول",       icon: "🔫", color: "#8b5cf6" },
+  explosive: { labelFa: "انفجاری",      icon: "💣", color: "#ef4444" },
+  melee:     { labelFa: "سرد",          icon: "⚔️", color: "#6b7280" },
+  special:   { labelFa: "ویژه",         icon: "✨", color: "#ffd700" },
+};
+
+const TIER_COLORS: Record<string, string> = {
+  S: "#ffd700",
+  A: "#22c55e",
+  B: "#3b82f6",
+  C: "#f59e0b",
+  D: "#6b7280",
+};
+
+export function getTierColor(tier: string): string {
+  return TIER_COLORS[tier] ?? "#6b7280";
+}
+
+export const WEAPONS: Weapon[] = [
+  // ASSAULT RIFLES
+  {
+    id: "w-001",
+    nameFa: "تفنگ تهاجمی استاندارد",
+    nameEn: "Assault Rifle",
+    category: "assault",
+    rarity: "common",
+    damage: 30,
+    dps: 198,
+    fireRate: 5.5,
+    magazineSize: 30,
+    reloadTime: 2.0,
+    range: "متوسط",
+    tier: "B",
+    emoji: "🔫",
+    description: "تفنگ پایه برای نبردهای میان‌برد. قابل اعتماد و متعادل",
+  },
+  {
+    id: "w-002",
+    nameFa: "تفنگ تهاجمی حماسی",
+    nameEn: "Epic Assault Rifle",
+    category: "assault",
+    rarity: "epic",
+    damage: 33,
+    dps: 218,
+    fireRate: 5.5,
+    magazineSize: 30,
+    reloadTime: 1.9,
+    range: "متوسط",
+    tier: "A",
+    emoji: "🔫",
+    description: "نسخه بهبود یافته با آسیب بالاتر و reload سریع‌تر",
+  },
+  {
+    id: "w-003",
+    nameFa: "تفنگ اسکاوت",
+    nameEn: "Scout Rifle",
+    category: "assault",
+    rarity: "rare",
+    damage: 60,
+    dps: 156,
+    fireRate: 2.6,
+    magazineSize: 15,
+    reloadTime: 2.2,
+    range: "بلند",
+    tier: "S",
+    emoji: "🎯",
+    description: "دقت بالا برای نبردهای دور. بهترین انتخاب در فصل جاری",
+  },
+  {
+    id: "w-004",
+    nameFa: "رایفل بروتال",
+    nameEn: "Brute Rifle",
+    category: "assault",
+    rarity: "legendary",
+    damage: 45,
+    dps: 270,
+    fireRate: 6.0,
+    magazineSize: 25,
+    reloadTime: 1.8,
+    range: "متوسط",
+    tier: "S",
+    emoji: "🔫",
+    description: "قوی‌ترین رایفل فصل. DPS استثنایی برای فشار مداوم",
+  },
+  // SHOTGUNS
+  {
+    id: "w-010",
+    nameFa: "شاتگان پامپ",
+    nameEn: "Pump Shotgun",
+    category: "shotgun",
+    rarity: "rare",
+    damage: 95,
+    dps: 140,
+    fireRate: 0.7,
+    magazineSize: 5,
+    reloadTime: 4.8,
+    range: "کوتاه",
+    tier: "A",
+    emoji: "💥",
+    description: "پادشاه نبردهای نزدیک. یک شات قوی می‌تواند بازی را تغییر دهد",
+  },
+  {
+    id: "w-011",
+    nameFa: "شاتگان تکتیکال",
+    nameEn: "Tactical Shotgun",
+    category: "shotgun",
+    rarity: "uncommon",
+    damage: 67,
+    dps: 201,
+    fireRate: 1.5,
+    magazineSize: 8,
+    reloadTime: 4.4,
+    range: "کوتاه",
+    tier: "B",
+    emoji: "💥",
+    description: "نرخ آتش بالاتر در برابر آسیب کمتر. خوب برای مبتدی‌ها",
+  },
+  {
+    id: "w-012",
+    nameFa: "شاتگان یخ",
+    nameEn: "Havoc Pump Shotgun",
+    category: "shotgun",
+    rarity: "legendary",
+    damage: 110,
+    dps: 154,
+    fireRate: 0.7,
+    magazineSize: 5,
+    reloadTime: 4.5,
+    range: "کوتاه",
+    tier: "S",
+    emoji: "💥",
+    description: "بیشترین آسیب تکی بین شاتگان‌ها. پیدا کردنش سخته ولی ارزشش داره",
+  },
+  // SMGs
+  {
+    id: "w-020",
+    nameFa: "مسلسل کوچک",
+    nameEn: "Submachine Gun",
+    category: "smg",
+    rarity: "common",
+    damage: 17,
+    dps: 255,
+    fireRate: 15,
+    magazineSize: 30,
+    reloadTime: 1.5,
+    range: "کوتاه",
+    tier: "B",
+    emoji: "⚡",
+    description: "نرخ آتش بسیار بالا. عالی برای خراب کردن سازه‌ها",
+  },
+  {
+    id: "w-021",
+    nameFa: "مسلسل طوفان",
+    nameEn: "Storm SMG",
+    category: "smg",
+    rarity: "epic",
+    damage: 22,
+    dps: 308,
+    fireRate: 14,
+    magazineSize: 35,
+    reloadTime: 1.4,
+    range: "کوتاه",
+    tier: "A",
+    emoji: "⚡",
+    description: "DPS برتر در کلاس SMG. برای فشار مداوم ایده‌آل است",
+  },
+  // SNIPERS
+  {
+    id: "w-030",
+    nameFa: "تفنگ بولت",
+    nameEn: "Bolt-Action Sniper",
+    category: "sniper",
+    rarity: "rare",
+    damage: 116,
+    dps: 64,
+    fireRate: 0.55,
+    magazineSize: 1,
+    reloadTime: 2.5,
+    range: "خیلی بلند",
+    tier: "A",
+    emoji: "🎯",
+    description: "کلاسیک فورتنایت. headshot می‌تواند هر کسی را یک‌شات کند",
+  },
+  {
+    id: "w-031",
+    nameFa: "تفنگ نیمه‌خودکار",
+    nameEn: "Semi-Auto Sniper",
+    category: "sniper",
+    rarity: "uncommon",
+    damage: 75,
+    dps: 120,
+    fireRate: 1.6,
+    magazineSize: 10,
+    reloadTime: 2.8,
+    range: "خیلی بلند",
+    tier: "B",
+    emoji: "🎯",
+    description: "نرخ آتش بیشتر با آسیب کمتر. برای دشمنانی که مدام حرکت می‌کنند",
+  },
+  // PISTOLS
+  {
+    id: "w-040",
+    nameFa: "پیستول",
+    nameEn: "Pistol",
+    category: "pistol",
+    rarity: "common",
+    damage: 26,
+    dps: 208,
+    fireRate: 8,
+    magazineSize: 16,
+    reloadTime: 1.3,
+    range: "متوسط",
+    tier: "C",
+    emoji: "🔫",
+    description: "سلاح پشتیبان مناسب. برای مواقع اضطراری کارایی دارد",
+  },
+  {
+    id: "w-041",
+    nameFa: "دیزرت ایگل",
+    nameEn: "Hand Cannon",
+    category: "pistol",
+    rarity: "epic",
+    damage: 78,
+    dps: 130,
+    fireRate: 0.93,
+    magazineSize: 7,
+    reloadTime: 1.8,
+    range: "بلند",
+    tier: "A",
+    emoji: "🔫",
+    description: "اگر بتوانی با آن هدف بزنی، غیرقابل توقف است",
+  },
+  // EXPLOSIVES
+  {
+    id: "w-050",
+    nameFa: "نارنجک انداز راکت",
+    nameEn: "Rocket Launcher",
+    category: "explosive",
+    rarity: "rare",
+    damage: 121,
+    dps: 72,
+    fireRate: 0.75,
+    magazineSize: 1,
+    reloadTime: 3.24,
+    range: "بلند",
+    tier: "A",
+    emoji: "💣",
+    description: "برای از بین بردن سازه‌ها بی‌نظیر. در مرحله آخر ضروری",
+  },
+  {
+    id: "w-051",
+    nameFa: "تفنگ گرنادی",
+    nameEn: "Grenade Launcher",
+    category: "explosive",
+    rarity: "uncommon",
+    damage: 110,
+    dps: 99,
+    fireRate: 0.9,
+    magazineSize: 6,
+    reloadTime: 3.5,
+    range: "متوسط",
+    tier: "B",
+    emoji: "💣",
+    description: "می‌توان با آن کمان زد و به دشمنان پشت سنگر آسیب زد",
+  },
+  // SPECIAL
+  {
+    id: "w-060",
+    nameFa: "شمشیر سبک",
+    nameEn: "Lightsaber",
+    category: "special",
+    rarity: "legendary",
+    damage: 55,
+    dps: 220,
+    fireRate: 4,
+    magazineSize: 999,
+    reloadTime: 0,
+    range: "کوتاه",
+    tier: "S",
+    emoji: "⚔️",
+    description: "رویداد جنگ ستارگان. مسدود کننده گلوله و آسیب برق‌آسا",
+  },
+];

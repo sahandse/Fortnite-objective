@@ -6,48 +6,64 @@ import { QUEST_CATEGORIES } from "@/lib/questData";
 interface Props {
   quest: Quest;
   isFavorite: boolean;
+  isCompleted: boolean;
   onToggleFavorite: (id: string) => void;
+  onToggleComplete: (id: string) => void;
 }
 
-export default function QuestCard({ quest, isFavorite, onToggleFavorite }: Props) {
+export default function QuestCard({ quest, isFavorite, isCompleted, onToggleFavorite, onToggleComplete }: Props) {
   const cat = QUEST_CATEGORIES[quest.category];
 
   return (
     <div
-      className="relative rounded-xl p-4 card-hover group"
+      className="relative rounded-xl p-4 card-hover group transition-opacity"
       style={{
-        background: "#111827",
-        border: "1px solid #1f2937",
-        borderRight: `3px solid ${cat.color}`,
+        background: isCompleted ? "#0a1a0a" : "#111827",
+        border: `1px solid ${isCompleted ? "#22c55e40" : "#1f2937"}`,
+        borderRight: `3px solid ${isCompleted ? "#22c55e" : cat.color}`,
+        opacity: isCompleted ? 0.7 : 1,
       }}>
       {/* New badge */}
-      {quest.isNew && (
-        <span
-          className="absolute top-3 left-3 text-xs font-bold px-2 py-0.5 rounded-full"
+      {quest.isNew && !isCompleted && (
+        <span className="absolute top-3 left-12 text-xs font-bold px-2 py-0.5 rounded-full"
           style={{ background: "#ef4444", color: "#fff" }}>
           جدید
         </span>
       )}
 
-      {/* Favorite button */}
-      <button
-        onClick={() => onToggleFavorite(quest.id)}
-        className={`absolute top-3 ${quest.isNew ? "left-14" : "left-3"} star-btn text-lg ${isFavorite ? "active" : "text-gray-600 opacity-0 group-hover:opacity-100"}`}
-        aria-label="علاقه‌مندی">
-        {isFavorite ? "⭐" : "☆"}
-      </button>
+      {/* Top-right actions */}
+      <div className="absolute top-3 left-3 flex items-center gap-1">
+        {/* Complete checkbox */}
+        <button
+          onClick={() => onToggleComplete(quest.id)}
+          className="w-6 h-6 rounded-md flex items-center justify-center text-xs transition-all"
+          style={{
+            background: isCompleted ? "#22c55e" : "#1f2937",
+            border: `1px solid ${isCompleted ? "#22c55e" : "#374151"}`,
+            color: isCompleted ? "#fff" : "#9ca3af",
+          }}
+          title={isCompleted ? "علامت‌گذاری به عنوان انجام نشده" : "علامت‌گذاری به عنوان انجام شده"}>
+          {isCompleted ? "✓" : ""}
+        </button>
+        {/* Favorite */}
+        <button
+          onClick={() => onToggleFavorite(quest.id)}
+          className={`star-btn text-base ${isFavorite ? "active" : "text-gray-600 opacity-0 group-hover:opacity-100"}`}
+          aria-label="علاقه‌مندی">
+          {isFavorite ? "⭐" : "☆"}
+        </button>
+      </div>
 
       {/* Category badge */}
-      <div className="flex items-start justify-between mb-3 pl-6">
-        <span
-          className={`text-xs font-medium px-2 py-1 rounded-lg category-${quest.category}`}>
+      <div className="mb-3 pl-16">
+        <span className={`text-xs font-medium px-2 py-1 rounded-lg category-${quest.category}`}>
           {cat.icon} {cat.labelFa}
           {quest.week && ` · هفته ${quest.week}`}
         </span>
       </div>
 
-      {/* Title */}
-      <h3 className="font-bold text-white text-sm leading-relaxed mb-1">
+      {/* Title with strikethrough if completed */}
+      <h3 className={`font-bold text-sm leading-relaxed mb-1 ${isCompleted ? "line-through text-gray-500" : "text-white"}`}>
         {quest.titleFa}
       </h3>
 
@@ -59,20 +75,18 @@ export default function QuestCard({ quest, isFavorite, onToggleFavorite }: Props
       {/* Target */}
       <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
         <span>🎯</span>
-        <span>
-          {quest.target.toLocaleString("fa-IR")} {quest.targetUnit}
-        </span>
+        <span>{quest.target.toLocaleString("fa-IR")} {quest.targetUnit}</span>
       </div>
 
-      {/* Progress bar (decorative) */}
+      {/* Progress bar */}
       <div className="progress-bar mb-3">
-        <div className="progress-fill" style={{ width: "0%" }} />
+        <div className="progress-fill" style={{ width: isCompleted ? "100%" : "0%" }} />
       </div>
 
       {/* XP Reward */}
       <div className="flex items-center justify-between">
-        <span className="xp-badge">
-          ✨ {quest.xpReward.toLocaleString("fa-IR")} XP
+        <span className={`xp-badge ${isCompleted ? "opacity-50" : ""}`}>
+          {isCompleted ? "✅" : "✨"} {quest.xpReward.toLocaleString("fa-IR")} XP
         </span>
         <div className="flex gap-1">
           {quest.tags.slice(0, 2).map((tag) => (
