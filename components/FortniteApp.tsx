@@ -6,9 +6,7 @@ import { QUESTS, QUEST_CATEGORIES } from "@/lib/questData";
 import {
   fetchItemShop,
   fetchFortniteNews,
-  getRarityColor,
   translateType,
-  formatVBucks,
   FortniteNews,
 } from "@/lib/fortniteApi";
 import QuestCard from "./QuestCard";
@@ -338,18 +336,24 @@ export default function FortniteApp() {
               </div>
             )}
 
-            {shopSource === "offline" && (
-              <div className="text-center py-3 px-4 rounded-xl text-sm"
-                style={{ background: "#1a0a0a", border: "1px solid #ef444420", color: "#ef4444" }}>
-                ⚠️ داده‌های live در دسترس نیست. نمونه‌های آفلاین نمایش داده می‌شود.
-                برای مشاهده شاپ واقعی به{" "}
-                <a href="https://fortnite.gg/shop" target="_blank" rel="noopener" className="underline">fortnite.gg/shop</a>{" "}
-                مراجعه کنید.
-              </div>
-            )}
-
-            <div className="text-center text-xs text-gray-600 pt-2 border-t border-gray-800">
-              داده از <a href="https://fortnite-api.com" target="_blank" rel="noopener" className="text-blue-400 hover:underline">fortnite-api.com</a>
+            {/* Live shop link */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 border-t border-gray-800">
+              <a
+                href="https://fortnite.gg/shop"
+                target="_blank"
+                rel="noopener"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all"
+                style={{ background: "linear-gradient(135deg,#00d4ff,#8b5cf6)", color: "#000" }}>
+                🛒 مشاهده شاپ زنده در fortnite.gg
+              </a>
+              {shopSource === "offline" && (
+                <span className="text-xs text-gray-500">
+                  آیتم‌های نمایش‌داده‌شده نمونه هستند — برای شاپ واقعی روز کلیک کنید
+                </span>
+              )}
+              <span className="text-xs text-gray-700 mr-auto hidden sm:block">
+                داده از <a href="https://fortnite-api.com" target="_blank" rel="noopener" className="text-blue-400 hover:underline">fortnite-api.com</a>
+              </span>
             </div>
           </div>
         )}

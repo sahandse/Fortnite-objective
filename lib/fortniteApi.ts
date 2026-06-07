@@ -1,146 +1,138 @@
 import { ShopItem, FortniteAPIShopResponse } from "@/types";
+import { getItemNameFa } from "./persianNames";
 
 export const typeTranslations: Record<string, string> = {
-  outfit: "پوشاک",
-  backpack: "کوله‌پشتی",
-  pickaxe: "کلنگ",
-  glider: "چتر",
-  contrail: "اثر حرکتی",
-  emote: "احساسات",
-  wrap: "پوشش سلاح",
-  loading: "تصویر بارگذاری",
-  banner: "پرچم",
-  spray: "اسپری",
-  toy: "اسباب‌بازی",
-  music: "موزیک",
-  bundle: "بسته",
+  outfit:    "پوشاک",
+  backpack:  "کوله‌پشتی",
+  pickaxe:   "کلنگ",
+  glider:    "چتر",
+  contrail:  "اثر حرکتی",
+  emote:     "احساسات",
+  wrap:      "پوشش سلاح",
+  loading:   "تصویر بارگذاری",
+  banner:    "پرچم",
+  spray:     "اسپری",
+  toy:       "اسباب‌بازی",
+  music:     "موزیک",
+  bundle:    "بسته",
 };
 
 export const rarityTranslations: Record<string, string> = {
-  common: "معمولی",
-  uncommon: "غیرمعمول",
-  rare: "کمیاب",
-  epic: "حماسی",
-  legendary: "افسانه‌ای",
-  mythic: "اساطیری",
-  "marvel series": "Marvel",
-  "dc series": "DC",
-  "icon series": "آیکون",
+  common:                  "معمولی",
+  uncommon:                "غیرمعمول",
+  rare:                    "کمیاب",
+  epic:                    "حماسی",
+  legendary:               "افسانه‌ای",
+  mythic:                  "اساطیری",
+  "marvel series":         "مارول",
+  "dc series":             "DC",
+  "icon series":           "آیکون",
   "gaming legends series": "افسانه‌های گیمینگ",
+  shadow:                  "سایه",
+  slurp:                   "اسلرپ",
+  frozen:                  "یخ‌زده",
+  lava:                    "گدازه",
+  dark:                    "تاریک",
+  starwars:                "جنگ ستارگان",
+  platform:                "پلتفرم",
 };
 
-// --- CORS-aware fetch with proxy fallback chain ---
-async function fetchWithProxy(url: string): Promise<unknown | null> {
-  const timeout = 7000;
+export const sectionTranslations: Record<string, string> = {
+  "Featured Items":   "آیتم‌های ویژه",
+  "Daily Items":      "آیتم‌های روزانه",
+  "Special Items":    "آیتم‌های خاص",
+  "New Items":        "آیتم‌های جدید",
+  "Icon Series":      "سری آیکون",
+  "Gaming Legends":   "افسانه‌های گیمینگ",
+  "Star Wars":        "جنگ ستارگان",
+  "Marvel":           "مارول",
+  "Starter Pack":     "بسته مبتدی",
+  "Bundles":          "بسته‌ها",
+};
 
+export function translateSection(s?: string): string {
+  if (!s) return "";
+  return sectionTranslations[s] ?? s;
+}
+
+// ── CORS proxy chain ────────────────────────────────────────────────────────
+async function tryCORS(url: string): Promise<unknown | null> {
+  const t = 7000;
   const attempts = [
-    // 1. Direct (works if API allows browser CORS)
     async () => {
-      const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(timeout) });
-      if (!res.ok) throw new Error(`${res.status}`);
-      return res.json();
+      const r = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(t) });
+      if (!r.ok) throw new Error(`${r.status}`);
+      return r.json();
     },
-    // 2. corsproxy.io
     async () => {
-      const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`, {
-        cache: "no-store",
-        signal: AbortSignal.timeout(timeout),
+      const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`, {
+        cache: "no-store", signal: AbortSignal.timeout(t),
       });
-      if (!res.ok) throw new Error(`${res.status}`);
-      return res.json();
+      if (!r.ok) throw new Error(`${r.status}`);
+      return r.json();
     },
-    // 3. allorigins.win (wraps in { contents: string })
     async () => {
-      const res = await fetch(
-        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-        { cache: "no-store", signal: AbortSignal.timeout(timeout) }
-      );
-      if (!res.ok) throw new Error(`${res.status}`);
-      const wrapper = await res.json();
-      return JSON.parse(wrapper.contents);
+      const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, {
+        cache: "no-store", signal: AbortSignal.timeout(t),
+      });
+      if (!r.ok) throw new Error(`${r.status}`);
+      const w = await r.json();
+      return JSON.parse(w.contents);
     },
   ];
-
-  for (const attempt of attempts) {
-    try {
-      const data = await attempt();
-      return data;
-    } catch {
-      // try next proxy
-    }
+  for (const fn of attempts) {
+    try { return await fn(); } catch { /* next proxy */ }
   }
   return null;
 }
 
-function parseShopEntries(data: FortniteAPIShopResponse): ShopItem[] {
+function parseShop(data: FortniteAPIShopResponse): ShopItem[] {
   const items: ShopItem[] = [];
   const seen = new Set<string>();
 
   for (const entry of data.data.entries) {
     if (!entry.items?.length) continue;
-    const primary = entry.items[0];
-    if (seen.has(primary.id)) continue;
-    seen.add(primary.id);
+    const p = entry.items[0];
+    if (seen.has(p.id)) continue;
+    seen.add(p.id);
 
-    const typeKey = primary.type?.value?.toLowerCase() ?? "outfit";
-    const rarityKey = primary.rarity?.value?.toLowerCase() ?? "common";
+    const typeKey   = p.type?.value?.toLowerCase()   ?? "outfit";
+    const rarityKey = p.rarity?.value?.toLowerCase() ?? "common";
 
     items.push({
-      id: primary.id,
-      name: primary.name,
-      nameFa: primary.name,
-      type: typeKey as ShopItem["type"],
+      id:     p.id,
+      name:   p.name,
+      nameFa: getItemNameFa(p.name),
+      type:   typeKey  as ShopItem["type"],
       rarity: rarityKey as ShopItem["rarity"],
-      price: entry.finalPrice,
+      price:  entry.finalPrice,
       images: {
-        icon: primary.images?.icon,
-        featured: primary.images?.featured ?? primary.images?.icon,
-        smallIcon: primary.images?.smallIcon,
-        background: primary.images?.background,
+        icon:      p.images?.icon,
+        featured:  p.images?.featured ?? p.images?.icon,
+        smallIcon: p.images?.smallIcon,
+        background:p.images?.background,
       },
-      description: primary.description,
+      description:   p.description,
       descriptionFa: typeTranslations[typeKey] ?? typeKey,
       isBundle: !!entry.bundle,
-      section: entry.section?.name ?? entry.layout?.name,
+      section:  entry.section?.name ?? entry.layout?.name,
     });
   }
   return items;
 }
 
 export async function fetchItemShop(): Promise<{ items: ShopItem[]; source: string }> {
-  const data = await fetchWithProxy("https://fortnite-api.com/v2/shop?language=en");
-
+  const data = await tryCORS("https://fortnite-api.com/v2/shop?language=en");
   if (data) {
     try {
-      const parsed = parseShopEntries(data as FortniteAPIShopResponse);
+      const parsed = parseShop(data as FortniteAPIShopResponse);
       if (parsed.length > 0) return { items: parsed, source: "live" };
-    } catch {
-      // bad parse
-    }
+    } catch { /* fall through */ }
   }
-
   return { items: getFallbackShopItems(), source: "offline" };
 }
 
-export async function fetchFortniteNews(): Promise<FortniteNews[]> {
-  const data = await fetchWithProxy("https://fortnite-api.com/v2/news/br?language=en");
-  if (!data) return getFallbackNews();
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const d = data as any;
-    const motds = d?.data?.motds ?? d?.data?.news?.motds ?? [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return motds.slice(0, 6).map((m: any) => ({
-      id: m.id ?? Math.random().toString(),
-      title: m.title ?? "",
-      body: m.body ?? m.tabTitle ?? "",
-      image: m.image ?? m.largeImage ?? "",
-    }));
-  } catch {
-    return getFallbackNews();
-  }
-}
-
+// ── News ────────────────────────────────────────────────────────────────────
 export interface FortniteNews {
   id: string;
   title: string;
@@ -148,27 +140,44 @@ export interface FortniteNews {
   image: string;
 }
 
+export async function fetchFortniteNews(): Promise<FortniteNews[]> {
+  const data = await tryCORS("https://fortnite-api.com/v2/news/br?language=en");
+  if (!data) return getFallbackNews();
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const motds = (data as any)?.data?.motds ?? (data as any)?.data?.news?.motds ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return motds.slice(0, 6).map((m: any) => ({
+      id:    m.id    ?? String(Math.random()),
+      title: m.title ?? "",
+      body:  m.body  ?? m.tabTitle ?? "",
+      image: m.image ?? m.largeImage ?? "",
+    }));
+  } catch { return getFallbackNews(); }
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
 export function getRarityColor(rarity: string): string {
-  const colors: Record<string, string> = {
-    common: "#b8c4c8",
-    uncommon: "#69be28",
-    rare: "#2d91ff",
-    epic: "#c05dff",
-    legendary: "#ff8000",
-    mythic: "#f0c132",
-    marvel: "#ed1d24",
-    dc: "#0075f5",
-    icon: "#23eebc",
-    gaminglegends: "#6a0dad",
-    shadow: "#9ca3af",
-    slurp: "#00edff",
-    frozen: "#add8e6",
-    lava: "#ff4500",
-    dark: "#6600cc",
-    starwars: "#ffe81f",
-    platform: "#0078d7",
+  const map: Record<string, string> = {
+    common:       "#b8c4c8",
+    uncommon:     "#69be28",
+    rare:         "#2d91ff",
+    epic:         "#c05dff",
+    legendary:    "#ff8000",
+    mythic:       "#f0c132",
+    marvel:       "#ed1d24",
+    dc:           "#0075f5",
+    icon:         "#23eebc",
+    gaminglegends:"#6a0dad",
+    shadow:       "#9ca3af",
+    slurp:        "#00edff",
+    frozen:       "#add8e6",
+    lava:         "#ff4500",
+    dark:         "#6600cc",
+    starwars:     "#ffe81f",
+    platform:     "#0078d7",
   };
-  return colors[rarity] ?? "#b8c4c8";
+  return map[rarity] ?? "#b8c4c8";
 }
 
 export function translateRarity(rarity: string): string {
@@ -183,142 +192,143 @@ export function formatVBucks(price: number): string {
   return price.toLocaleString("en-US");
 }
 
-// Realistic fallback items with working CDN images
+// ── Fallback shop items (real CDN IDs from fortnite-api.com) ─────────────────
+const CDN = "https://fortnite-api.com/images/cosmetics/br";
+
+function mkImg(id: string) {
+  return {
+    icon:      `${CDN}/${id}/icon.png`,
+    featured:  `${CDN}/${id}/featured.png`,
+    smallIcon: `${CDN}/${id}/smallIcon.png`,
+  };
+}
+
 function getFallbackShopItems(): ShopItem[] {
   return [
+    // ── Featured / ویژه ──────────────────────────────────────────────────────
+    {
+      id: "CID_030_Athena_Commando_M_Halloween",
+      name: "Skull Trooper",      nameFa: "سرباز جمجمه",
+      type: "outfit", rarity: "epic", price: 1500,
+      images: mkImg("CID_030_Athena_Commando_M_Halloween"),
+      descriptionFa: "پوشاک", section: "Featured Items",
+    },
+    {
+      id: "CID_029_Athena_Commando_F_Halloween",
+      name: "Ghoul Trooper",      nameFa: "سرباز غول",
+      type: "outfit", rarity: "epic", price: 1500,
+      images: mkImg("CID_029_Athena_Commando_F_Halloween"),
+      descriptionFa: "پوشاک", section: "Featured Items",
+    },
+    {
+      id: "CID_084_Athena_Commando_M_Medieval",
+      name: "Black Knight",       nameFa: "شوالیه سیاه",
+      type: "outfit", rarity: "legendary", price: 2000,
+      images: mkImg("CID_084_Athena_Commando_M_Medieval"),
+      descriptionFa: "پوشاک", section: "Featured Items",
+    },
+    {
+      id: "CID_086_Athena_Commando_F_Medieval",
+      name: "Red Knight",         nameFa: "شوالیه قرمز",
+      type: "outfit", rarity: "legendary", price: 2000,
+      images: mkImg("CID_086_Athena_Commando_F_Medieval"),
+      descriptionFa: "پوشاک", section: "Featured Items",
+    },
+    // ── Daily outfits / روزانه ───────────────────────────────────────────────
     {
       id: "CID_162_Athena_Commando_F_Bullseye",
-      name: "Bullseye",
-      nameFa: "تیرانداز",
-      type: "outfit",
-      rarity: "rare",
-      price: 1200,
-      images: {
-        icon: "https://media.fortniteapi.io/images/cosmetics/br/CID_162_Athena_Commando_F_Bullseye/icon.png",
-        featured: "https://media.fortniteapi.io/images/cosmetics/br/CID_162_Athena_Commando_F_Bullseye/featured.png",
-      },
-      descriptionFa: "پوشاک",
-      section: "Featured Items",
+      name: "Bullseye",           nameFa: "هدف دقیق",
+      type: "outfit", rarity: "rare", price: 1200,
+      images: mkImg("CID_162_Athena_Commando_F_Bullseye"),
+      descriptionFa: "پوشاک", section: "Daily Items",
+    },
+    {
+      id: "CID_032_Athena_Commando_F_Medieval",
+      name: "Blue Squire",        nameFa: "سرباز آبی",
+      type: "outfit", rarity: "rare", price: 1200,
+      images: mkImg("CID_032_Athena_Commando_F_Medieval"),
+      descriptionFa: "پوشاک", section: "Daily Items",
+    },
+    {
+      id: "CID_028_Athena_Commando_F",
+      name: "Renegade",           nameFa: "شورشی",
+      type: "outfit", rarity: "uncommon", price: 800,
+      images: mkImg("CID_028_Athena_Commando_F"),
+      descriptionFa: "پوشاک", section: "Daily Items",
     },
     {
       id: "CID_017_Athena_Commando_M",
-      name: "Aerial Assault Trooper",
-      nameFa: "سرباز هوایی",
-      type: "outfit",
-      rarity: "uncommon",
-      price: 800,
-      images: {
-        icon: "https://media.fortniteapi.io/images/cosmetics/br/CID_017_Athena_Commando_M/icon.png",
-      },
-      descriptionFa: "پوشاک",
-      section: "Daily Items",
+      name: "Aerial Assault Trooper", nameFa: "سرباز هوایی",
+      type: "outfit", rarity: "uncommon", price: 800,
+      images: mkImg("CID_017_Athena_Commando_M"),
+      descriptionFa: "پوشاک", section: "Daily Items",
     },
+    // ── Emotes / احساسات ─────────────────────────────────────────────────────
     {
       id: "EID_Floss",
-      name: "Floss",
-      nameFa: "فلاس",
-      type: "emote",
-      rarity: "rare",
-      price: 500,
-      images: {
-        icon: "https://media.fortniteapi.io/images/cosmetics/br/EID_Floss/icon.png",
-      },
-      descriptionFa: "احساسات",
-      section: "Daily Items",
+      name: "Floss",              nameFa: "فلاس",
+      type: "emote", rarity: "rare", price: 500,
+      images: mkImg("EID_Floss"),
+      descriptionFa: "احساسات", section: "Daily Items",
     },
     {
       id: "EID_TakeTheL",
-      name: "Take The L",
-      nameFa: "ببر L را",
-      type: "emote",
-      rarity: "rare",
-      price: 500,
-      images: {
-        icon: "https://media.fortniteapi.io/images/cosmetics/br/EID_TakeTheL/icon.png",
-      },
-      descriptionFa: "احساسات",
-      section: "Daily Items",
+      name: "Take the L",         nameFa: "ببر L را",
+      type: "emote", rarity: "rare", price: 500,
+      images: mkImg("EID_TakeTheL"),
+      descriptionFa: "احساسات", section: "Daily Items",
     },
     {
-      id: "Pickaxe_DualEdge",
-      name: "Dual Edge",
-      nameFa: "لبه دوگانه",
-      type: "pickaxe",
-      rarity: "uncommon",
-      price: 500,
-      images: {
-        icon: "https://media.fortniteapi.io/images/cosmetics/br/Pickaxe_DualEdge/icon.png",
-      },
-      descriptionFa: "کلنگ",
-      section: "Daily Items",
+      id: "EID_OrangeJustice",
+      name: "Orange Justice",     nameFa: "عدالت نارنجی",
+      type: "emote", rarity: "rare", price: 500,
+      images: mkImg("EID_OrangeJustice"),
+      descriptionFa: "احساسات", section: "Daily Items",
+    },
+    {
+      id: "EID_RideThePony",
+      name: "Ride the Pony",      nameFa: "سواری بر اسب",
+      type: "emote", rarity: "epic", price: 800,
+      images: mkImg("EID_RideThePony"),
+      descriptionFa: "احساسات", section: "Daily Items",
+    },
+    // ── Pickaxes / کلنگ ──────────────────────────────────────────────────────
+    {
+      id: "Pickaxe_Lockjaw",
+      name: "Raider's Revenge",   nameFa: "انتقام غارتگر",
+      type: "pickaxe", rarity: "uncommon", price: 500,
+      images: mkImg("Pickaxe_Lockjaw"),
+      descriptionFa: "کلنگ", section: "Daily Items",
+    },
+    {
+      id: "Pickaxe_DualPick",
+      name: "Dual Edge",          nameFa: "لبه دوگانه",
+      type: "pickaxe", rarity: "uncommon", price: 500,
+      images: mkImg("Pickaxe_DualPick"),
+      descriptionFa: "کلنگ", section: "Daily Items",
+    },
+    // ── Gliders / چتر ───────────────────────────────────────────────────────
+    {
+      id: "Glider_Default",
+      name: "Mako",               nameFa: "ماکو",
+      type: "glider", rarity: "rare", price: 500,
+      images: mkImg("Glider_Default"),
+      descriptionFa: "چتر", section: "Daily Items",
     },
     {
       id: "Glider_Airhead",
-      name: "Airhead",
-      nameFa: "سر هوایی",
-      type: "glider",
-      rarity: "uncommon",
-      price: 500,
-      images: {
-        icon: "https://media.fortniteapi.io/images/cosmetics/br/Glider_Airhead/icon.png",
-      },
-      descriptionFa: "چتر",
-      section: "Daily Items",
+      name: "Airhead",            nameFa: "سر هوایی",
+      type: "glider", rarity: "uncommon", price: 300,
+      images: mkImg("Glider_Airhead"),
+      descriptionFa: "چتر", section: "Daily Items",
     },
+    // ── Wraps / پوشش سلاح ───────────────────────────────────────────────────
     {
-      id: "CID_315_Athena_Commando_M_TeriyakiFish",
-      name: "Moisty Merman",
-      nameFa: "موجود دریایی",
-      type: "outfit",
-      rarity: "epic",
-      price: 1500,
-      images: {
-        icon: "https://media.fortniteapi.io/images/cosmetics/br/CID_315_Athena_Commando_M_TeriyakiFish/icon.png",
-        featured: "https://media.fortniteapi.io/images/cosmetics/br/CID_315_Athena_Commando_M_TeriyakiFish/featured.png",
-      },
-      descriptionFa: "پوشاک",
-      section: "Featured Items",
-    },
-    {
-      id: "CID_116_Athena_Commando_M_Carbide",
-      name: "Carbide",
-      nameFa: "کاربید",
-      type: "outfit",
-      rarity: "legendary",
-      price: 2000,
-      images: {
-        icon: "https://media.fortniteapi.io/images/cosmetics/br/CID_116_Athena_Commando_M_Carbide/icon.png",
-        featured: "https://media.fortniteapi.io/images/cosmetics/br/CID_116_Athena_Commando_M_Carbide/featured.png",
-      },
-      descriptionFa: "پوشاک",
-      section: "Featured Items",
-    },
-    {
-      id: "CID_120_Athena_Commando_F_Omega",
-      name: "Omega",
-      nameFa: "امگا",
-      type: "outfit",
-      rarity: "legendary",
-      price: 2000,
-      images: {
-        icon: "https://media.fortniteapi.io/images/cosmetics/br/CID_120_Athena_Commando_F_Omega/icon.png",
-        featured: "https://media.fortniteapi.io/images/cosmetics/br/CID_120_Athena_Commando_F_Omega/featured.png",
-      },
-      descriptionFa: "پوشاک",
-      section: "Featured Items",
-    },
-    {
-      id: "Wrap_056_RoadTrip",
-      name: "Dragon Scales",
-      nameFa: "فلس اژدها",
-      type: "wrap",
-      rarity: "rare",
-      price: 300,
-      images: {
-        icon: "https://media.fortniteapi.io/images/cosmetics/br/Wrap_056_RoadTrip/icon.png",
-      },
-      descriptionFa: "پوشش سلاح",
-      section: "Daily Items",
+      id: "Wrap_010_Scales",
+      name: "Dragon Scales",      nameFa: "فلس اژدها",
+      type: "wrap", rarity: "rare", price: 300,
+      images: mkImg("Wrap_010_Scales"),
+      descriptionFa: "پوشش سلاح", section: "Daily Items",
     },
   ];
 }
@@ -326,27 +336,33 @@ function getFallbackShopItems(): ShopItem[] {
 function getFallbackNews(): FortniteNews[] {
   return [
     {
-      id: "news-1",
-      title: "فصل ۲ فصل ۷: اتحاد یا فتح",
-      body: "با Dark Voyager روبرو شو و مکعب‌های آشوب را جمع‌آوری کن. آینده جزیره در دستان توست.",
+      id: "n1",
+      title: "فصل ۲ فصل ۷: یخ یا آشوب",
+      body: "Dark Voyager با مکعب‌های آشوب بازگشته. تیم Foundation یا Ice King را انتخاب کن.",
       image: "",
     },
     {
-      id: "news-2",
-      title: "رویداد جنگ ستارگان",
-      body: "با Luke Skywalker، Darth Vader و R2-D2 بجنگ. نقشه‌های خلاقانه Star Wars فعال شدند.",
+      id: "n2",
+      title: "رویداد جنگ ستارگان — Unleash the Force",
+      body: "با Luke، Vader و Mandalorian بجنگ. نقشه‌های Galactic Siege، Escape Vader و Droid Tycoon فعال‌اند.",
       image: "",
     },
     {
-      id: "news-3",
-      title: "آپدیت v33.10",
-      body: "تعادل سلاح‌ها بهبود یافت. اسکاوت ریفل باز شد. باگ‌های رنک‌دار رفع شدند.",
+      id: "n3",
+      title: "آپدیت v33.10 — تعادل سلاح‌ها",
+      body: "Scout Rifle بازگشت. شاتگان‌ها تنظیم شدند. باگ‌های رنک‌دار رفع شد.",
       image: "",
     },
     {
-      id: "news-4",
-      title: "Battle Pass جدید",
+      id: "n4",
+      title: "Battle Pass فصل ۷",
       body: "Foundation (Reforged)، Exalted Ice King و Elite Jules را آنلاک کن.",
+      image: "",
+    },
+    {
+      id: "n5",
+      title: "هفته ۸ — نبرد نهایی",
+      body: "کوئست‌های هفته ۸ فعال شد. یادبود Ice King را بشکن و Dark Voyager را شکست بده.",
       image: "",
     },
   ];
