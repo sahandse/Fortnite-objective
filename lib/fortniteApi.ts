@@ -32,7 +32,7 @@ const rarityTranslations: Record<string, string> = {
 export async function fetchItemShop(): Promise<ShopItem[]> {
   try {
     const res = await fetch("https://fortnite-api.com/v2/shop?language=en", {
-      next: { revalidate: 3600 },
+      cache: "no-store",
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data: FortniteAPIShopResponse = await res.json();
