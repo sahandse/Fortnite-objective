@@ -27,9 +27,11 @@ export default function CosmeticsSection() {
     } catch {}
   }, []);
 
-  // Fetch when typeFilter changes
+  // Fetch when typeFilter changes; also reset search/rarity/page
   useEffect(() => {
     setLoading(true);
+    setSearch("");
+    setRarityFilter("all");
     fetchCosmetics(typeFilter).then((items) => {
       setAllItems(items);
       setLoading(false);
@@ -186,6 +188,12 @@ export default function CosmeticsSection() {
                   background: `linear-gradient(160deg, ${rColor}15 0%, #0f172a 100%)`,
                   cursor: "pointer",
                   transform: isHovered ? "scale(1.03)" : "scale(1)",
+                  boxShadow: isOwned
+                    ? `0 0 16px ${rColor}50`
+                    : isHovered
+                    ? `0 0 10px ${rColor}30`
+                    : "none",
+                  transition: "transform 0.15s, box-shadow 0.15s",
                 }}
               >
                 {/* Item image */}
@@ -203,8 +211,8 @@ export default function CosmeticsSection() {
                   />
                 )}
 
-                {/* Owned overlay */}
-                {isOwned && (
+                {/* Owned overlay (only when not hovered) */}
+                {isOwned && !isHovered && (
                   <div
                     className="absolute inset-0 flex items-center justify-center"
                     style={{ background: "#00000060" }}
@@ -213,30 +221,17 @@ export default function CosmeticsSection() {
                   </div>
                 )}
 
-                {/* Hover overlay */}
-                {isHovered && !isOwned && (
+                {/* Hover overlay — shows action text in rarity color */}
+                {isHovered && (
                   <div
                     className="absolute inset-0 flex items-center justify-center transition-opacity"
-                    style={{ background: "#00000070" }}
+                    style={{ background: "#00000078" }}
                   >
                     <span
                       className="text-xs font-bold"
                       style={{ color: rColor }}
                     >
-                      + دارم
-                    </span>
-                  </div>
-                )}
-                {isHovered && isOwned && (
-                  <div
-                    className="absolute inset-0 flex items-center justify-center transition-opacity"
-                    style={{ background: "#00000080" }}
-                  >
-                    <span
-                      className="text-xs font-bold"
-                      style={{ color: rColor }}
-                    >
-                      دارم ✓
+                      {isOwned ? "دارم ✓" : "+ دارم"}
                     </span>
                   </div>
                 )}

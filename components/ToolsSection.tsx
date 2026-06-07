@@ -8,28 +8,28 @@ const VBUCKS_PACKAGES = [
   { vbucks: 5000, usd: 31.99, bonus: 1000 },
   { vbucks: 13500, usd: 79.99, bonus: 3500 },
 ];
-const TOMAN_PER_USD = 65000;
+const TOMAN_PER_USD = 65000; // approximate
 
 const CREATIVE_CODES = [
-  { code: "7526-3873-7999", name: "Aim Lab — تمرین هدف‌گیری", type: "aim", desc: "بهترین مپ تمرین دقت تیراندازی" },
-  { code: "6562-8953-6647", name: "Box Fighting — نبرد در باکس", type: "box", desc: "تمرین نبرد در فضای بسته · ۱v۱" },
-  { code: "2476-8526-0249", name: "Edit Course — دوره ویرایش", type: "edit", desc: "تمرین ویرایش سریع بیلد" },
-  { code: "0535-9107-0571", name: "Build Fights — نبرد بیلد", type: "build", desc: "تمرین بیلدینگ در نبرد واقعی" },
-  { code: "9180-5458-9757", name: "Healing Course — دوره شفا", type: "heal", desc: "تمرین مدیریت آیتم و شفادهنده‌ها" },
-  { code: "3958-6073-5765", name: "Zone Wars — جنگ منطقه", type: "zone", desc: "تمرین موقعیت‌گیری آخر بازی" },
-  { code: "7620-0771-9529", name: "Piece Control — کنترل فضا", type: "piece", desc: "تمرین کنترل قطعات در ۱v۱" },
-  { code: "5958-5189-3484", name: "Dropper — سقوط آزاد", type: "drop", desc: "مپ سرگرمی و ریلکس" },
+  { code: "7526-3873-7999", name: "Aim Lab — تمرین هدف‌گیری",      type: "aim",   desc: "بهترین مپ تمرین دقت تیراندازی" },
+  { code: "6562-8953-6647", name: "Box Fighting — نبرد در باکس",   type: "box",   desc: "تمرین نبرد در فضای بسته · ۱v۱" },
+  { code: "2476-8526-0249", name: "Edit Course — دوره ویرایش",      type: "edit",  desc: "تمرین ویرایش سریع بیلد" },
+  { code: "0535-9107-0571", name: "Build Fights — نبرد بیلد",       type: "build", desc: "تمرین بیلدینگ در نبرد واقعی" },
+  { code: "9180-5458-9757", name: "Healing Course — دوره شفا",      type: "heal",  desc: "تمرین مدیریت آیتم و شفادهنده‌ها" },
+  { code: "3958-6073-5765", name: "Zone Wars — جنگ منطقه",          type: "zone",  desc: "تمرین موقعیت‌گیری آخر بازی" },
+  { code: "7620-0771-9529", name: "Piece Control — کنترل فضا",      type: "piece", desc: "تمرین کنترل قطعات در ۱v۱" },
+  { code: "5958-5189-3484", name: "Dropper — سقوط آزاد",            type: "drop",  desc: "مپ سرگرمی و ریلکس" },
 ];
 
 const TYPE_COLOR: Record<string, string> = {
-  aim: "#00d4ff",
-  box: "#8b5cf6",
-  edit: "#ffd700",
+  aim:   "#00d4ff",
+  box:   "#8b5cf6",
+  edit:  "#ffd700",
   build: "#22c55e",
-  heal: "#ec4899",
-  zone: "#f97316",
+  heal:  "#ec4899",
+  zone:  "#f97316",
   piece: "#14b8a6",
-  drop: "#a78bfa",
+  drop:  "#a78bfa",
 };
 
 function formatNum(n: number, decimals = 0): string {
@@ -44,8 +44,8 @@ export default function ToolsSection() {
   const [calcMode, setCalcMode] = useState<"vb2usd" | "usd2vb">("vb2usd");
   const [copied, setCopied] = useState<string | null>(null);
 
+  // Calculator logic
   const inputNum = parseFloat(vbInput) || 0;
-
   let vbucks = 0;
   let usd = 0;
   let toman = 0;
@@ -61,6 +61,7 @@ export default function ToolsSection() {
   }
   const rial = toman * 10;
 
+  // Copy code logic
   const copyCode = (code: string) => {
     navigator.clipboard?.writeText(code).catch(() => {});
     setCopied(code);
@@ -122,7 +123,11 @@ export default function ToolsSection() {
           min="0"
           value={vbInput}
           onChange={(e) => setVbInput(e.target.value)}
-          placeholder={calcMode === "vb2usd" ? "تعداد V-Bucks را وارد کنید..." : "مبلغ دلار را وارد کنید..."}
+          placeholder={
+            calcMode === "vb2usd"
+              ? "تعداد V-Bucks را وارد کنید..."
+              : "مبلغ دلار را وارد کنید..."
+          }
           className="w-full rounded-xl px-4 py-3 text-sm outline-none"
           style={{
             background: "#0f172a",
@@ -131,7 +136,7 @@ export default function ToolsSection() {
           }}
         />
 
-        {/* Results */}
+        {/* Results 2×2 grid */}
         {inputNum > 0 && (
           <div
             className="grid gap-3"
@@ -211,12 +216,9 @@ export default function ToolsSection() {
                 }}
               >
                 <div className="flex items-start justify-between gap-3 flex-wrap">
-                  {/* Left: vbucks + bonus */}
+                  {/* Left: vbucks + badges */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span
-                      className="text-base font-bold"
-                      style={{ color: "#2d91ff" }}
-                    >
+                    <span className="text-base font-bold" style={{ color: "#2d91ff" }}>
                       {formatNum(totalVb)} V-Bucks
                     </span>
                     {pkg.bonus > 0 && (
@@ -311,7 +313,7 @@ export default function ToolsSection() {
                   style={{
                     background: isCopied ? `${color}30` : `${color}18`,
                     border: `1px solid ${color}50`,
-                    color: isCopied ? color : color,
+                    color: color,
                     letterSpacing: isCopied ? "0.02em" : "0.05em",
                   }}
                 >
