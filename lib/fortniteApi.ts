@@ -1,4 +1,4 @@
-import { ShopItem, FortniteAPIShopResponse } from "@/types";
+import { ShopItem, FortniteAPIShopResponse, Cosmetic, MapPOI } from "@/types";
 import { getItemNameFa } from "./persianNames";
 
 export const typeTranslations: Record<string, string> = {
@@ -366,4 +366,31 @@ function getFallbackNews(): FortniteNews[] {
       image: "",
     },
   ];
+}
+
+// ── Map ─────────────────────────────────────────────────────────────────────
+export async function fetchMap(): Promise<{ images: { blank: string; pois: string }; pois: MapPOI[] } | null> {
+  const data = await tryCORS("https://fortnite-api.com/v1/map?language=en");
+  if (!data) return null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data as any).data ?? null;
+  } catch { return null; }
+}
+
+// ── Cosmetics ────────────────────────────────────────────────────────────────
+const _cosmeticsCache: Record<string, Cosmetic[]> = {};
+
+export async function fetchCosmetics(type = "outfit"): Promise<Cosmetic[]> {
+  if (_cosmeticsCache[type]) return _cosmeticsCache[type];
+  const url = `https://fortnite-api.com/v2/cosmetics/br/search/all?type=${type}&language=en`;
+  const data = await tryCORS(url);
+  if (!data) return [];
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = (data as any).data;
+    const arr: Cosmetic[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
+    _cosmeticsCache[type] = [...arr].reverse();
+    return _cosmeticsCache[type];
+  } catch { return []; }
 }

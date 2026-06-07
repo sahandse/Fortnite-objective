@@ -93,6 +93,24 @@ export interface FortniteAPIShopEntry {
   };
 }
 
+export interface MapPOI {
+  id: string;
+  name: string;
+  location: { x: number; y: number; z: number };
+}
+
+export interface Cosmetic {
+  id: string;
+  name: string;
+  description?: string;
+  type: { value: string; displayValue: string; backendValue: string };
+  rarity: { value: string; displayValue: string; backendValue: string };
+  images: { smallIcon?: string; icon?: string; featured?: string };
+  set?: { value: string; text: string; backendValue: string } | null;
+  series?: { value: string; image: string; colors: string[]; backendValue: string } | null;
+  added?: string;
+}
+
 export interface FortniteAPIItem {
   id: string;
   name: string;

@@ -16,8 +16,12 @@ import CategoryFilter from "./CategoryFilter";
 import ShopTimer from "./ShopTimer";
 import WeaponsSection from "./WeaponsSection";
 import NewsSection from "./NewsSection";
+import MapSection from "./MapSection";
+import CosmeticsSection from "./CosmeticsSection";
+import StatsSection from "./StatsSection";
+import ToolsSection from "./ToolsSection";
 
-type Tab = "objectives" | "shop" | "weapons" | "news";
+type Tab = "objectives" | "shop" | "weapons" | "news" | "map" | "cosmetics" | "stats" | "tools";
 
 export default function FortniteApp() {
   const [activeTab, setActiveTab] = useState<Tab>("objectives");
@@ -142,10 +146,14 @@ export default function FortniteApp() {
   const earnedXp = filteredQuests.filter((q) => completed.has(q.id)).reduce((s, q) => s + q.xpReward, 0);
 
   const TABS: { key: Tab; label: string; icon: string; badge?: number }[] = [
-    { key: "objectives", label: "اهداف", icon: "🎯", badge: newQuestCount },
+    { key: "objectives", label: "اهداف",    icon: "🎯", badge: newQuestCount },
     { key: "shop",       label: "آیتم‌شاپ", icon: "🛒" },
-    { key: "weapons",    label: "سلاح‌ها", icon: "⚔️" },
-    { key: "news",       label: "اخبار", icon: "📢" },
+    { key: "weapons",    label: "سلاح‌ها",  icon: "⚔️" },
+    { key: "news",       label: "اخبار",    icon: "📢" },
+    { key: "map",        label: "نقشه",     icon: "🗺️" },
+    { key: "cosmetics",  label: "اسکین‌ها", icon: "🎨" },
+    { key: "stats",      label: "آمار",     icon: "📊" },
+    { key: "tools",      label: "ابزار",    icon: "🔧" },
   ];
 
   return (
@@ -169,15 +177,15 @@ export default function FortniteApp() {
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex items-center gap-1 rounded-xl p-1 flex-1 min-w-0" style={{ background: "#111827" }}>
+            {/* Tabs — scrollable for 8 tabs */}
+            <div className="tabs-scroll flex items-center gap-1 rounded-xl p-1 flex-1 min-w-0" style={{ background: "#111827" }}>
               {TABS.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className="relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex-1 justify-center"
+                  className="relative flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-medium transition-all shrink-0"
                   style={activeTab === tab.key
-                    ? { background: "#1f2937", color: "#fff" }
+                    ? { background: "linear-gradient(135deg,#00d4ff30,#8b5cf630)", color: "#fff", border: "1px solid #00d4ff40" }
                     : { color: "#6b7280" }}>
                   <span>{tab.icon}</span>
                   <span className="hidden sm:inline">{tab.label}</span>
@@ -398,6 +406,50 @@ export default function FortniteApp() {
             <div className="text-center text-xs text-gray-600 pt-2 border-t border-gray-800">
               اخبار از <a href="https://fortnite-api.com" target="_blank" rel="noopener" className="text-blue-400 hover:underline">fortnite-api.com</a>
             </div>
+          </div>
+        )}
+
+        {/* ── MAP ── */}
+        {activeTab === "map" && (
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-xl font-bold text-white">نقشه فورتنایت</h2>
+              <p className="text-sm text-gray-400 mt-1">مناطق نقشه · رتبه‌بندی لوت · جستجوی منطقه</p>
+            </div>
+            <MapSection />
+          </div>
+        )}
+
+        {/* ── COSMETICS ── */}
+        {activeTab === "cosmetics" && (
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-xl font-bold text-white">مجموعه اسکین‌ها</h2>
+              <p className="text-sm text-gray-400 mt-1">همه آیتم‌های فورتنایت · علامت‌گذاری موارد دارم</p>
+            </div>
+            <CosmeticsSection />
+          </div>
+        )}
+
+        {/* ── STATS ── */}
+        {activeTab === "stats" && (
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-xl font-bold text-white">آمار و لینک‌های مفید</h2>
+              <p className="text-sm text-gray-400 mt-1">جستجوی بازیکن · سایت‌های فورتنایت</p>
+            </div>
+            <StatsSection />
+          </div>
+        )}
+
+        {/* ── TOOLS ── */}
+        {activeTab === "tools" && (
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-xl font-bold text-white">ابزارها</h2>
+              <p className="text-sm text-gray-400 mt-1">ماشین‌حساب V-Bucks · پکیج‌ها · کدهای تمرین Creative</p>
+            </div>
+            <ToolsSection />
           </div>
         )}
       </main>
