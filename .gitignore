@@ -24,3 +24,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+__next.*.txt
+index.txt
+out/
+.next/
