@@ -2,7 +2,15 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Cosmetic } from "@/types";
-import { fetchCosmetics, getRarityColor, translateRarity, translateType } from "@/lib/fortniteApi";
+import {
+  fetchCosmetics,
+  fetchNewCosmetics,
+  getRarityColor,
+  translateRarity,
+  translateType,
+  fortniteGgUrl,
+  daysAgo,
+} from "@/lib/fortniteApi";
 import { getItemNameFa } from "@/lib/persianNames";
 
 const TYPES = ["outfit", "emote", "pickaxe", "glider", "backpack", "wrap", "spray", "contrail"];
@@ -11,6 +19,7 @@ const PAGE_SIZE = 24;
 
 export default function CosmeticsSection() {
   const [allItems, setAllItems] = useState<Cosmetic[]>([]);
+  const [newItemIds, setNewItemIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState("outfit");
   const [rarityFilter, setRarityFilter] = useState("all");
@@ -18,6 +27,7 @@ export default function CosmeticsSection() {
   const [page, setPage] = useState(1);
   const [owned, setOwned] = useState<Set<string>>(new Set());
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [showNewOnly, setShowNewOnly] = useState(false);
 
   // Load owned from localStorage on mount
   useEffect(() => {
@@ -27,11 +37,21 @@ export default function CosmeticsSection() {
     } catch {}
   }, []);
 
+  // Fetch new cosmetics ids once on mount
+  useEffect(() => {
+    fetchNewCosmetics().then((data) => {
+      if (data?.items) {
+        setNewItemIds(new Set(data.items.map((i) => i.id)));
+      }
+    });
+  }, []);
+
   // Fetch when typeFilter changes; also reset search/rarity/page
   useEffect(() => {
     setLoading(true);
     setSearch("");
     setRarityFilter("all");
+    setShowNewOnly(false);
     fetchCosmetics(typeFilter).then((items) => {
       setAllItems(items);
       setLoading(false);
@@ -59,9 +79,10 @@ export default function CosmeticsSection() {
         !search.trim() ||
         item.name.toLowerCase().includes(search.toLowerCase()) ||
         nameFa.toLowerCase().includes(search.toLowerCase());
-      return matchesRarity && matchesSearch;
+      const matchesNew = !showNewOnly || newItemIds.has(item.id);
+      return matchesRarity && matchesSearch && matchesNew;
     });
-  }, [allItems, rarityFilter, search]);
+  }, [allItems, rarityFilter, search, showNewOnly, newItemIds]);
 
   const paged = useMemo(() => filtered.slice(0, page * PAGE_SIZE), [filtered, page]);
   const hasMore = paged.length < filtered.length;
@@ -101,8 +122,8 @@ export default function CosmeticsSection() {
         })}
       </div>
 
-      {/* Search + rarity row */}
-      <div className="flex gap-3 items-center">
+      {/* Search + rarity + new filter row */}
+      <div className="flex gap-2 items-center flex-wrap">
         <input
           type="text"
           value={search}
@@ -113,6 +134,7 @@ export default function CosmeticsSection() {
             background: "#111827",
             border: "1px solid #1f2937",
             color: "#e5e7eb",
+            minWidth: 120,
           }}
         />
         <select
@@ -132,22 +154,45 @@ export default function CosmeticsSection() {
             </option>
           ))}
         </select>
+        <button
+          onClick={() => { setShowNewOnly((v) => !v); setPage(1); }}
+          className="shrink-0 rounded-xl px-3 py-2 text-sm font-medium transition-all"
+          style={
+            showNewOnly
+              ? {
+                  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                  border: "1px solid #10b98180",
+                  color: "#fff",
+                }
+              : {
+                  background: "#111827",
+                  border: "1px solid #1f2937",
+                  color: "#6b7280",
+                }
+          }
+        >
+          🆕 جدید
+        </button>
       </div>
 
       {/* Stats line */}
-      <div className="text-sm flex gap-2 items-center" style={{ color: "#9ca3af" }}>
+      <div className="text-sm flex gap-2 items-center flex-wrap" style={{ color: "#9ca3af" }}>
         <span>{filtered.length} آیتم</span>
         <span>·</span>
         <span style={{ color: "#22c55e", fontWeight: 600 }}>{owned.size} دارم</span>
+        {newItemIds.size > 0 && (
+          <>
+            <span>·</span>
+            <span style={{ color: "#10b981", fontWeight: 600 }}>🆕 {newItemIds.size} تازه اضافه شده</span>
+          </>
+        )}
       </div>
 
       {/* Loading skeleton */}
       {loading && (
         <div
           className="grid gap-3"
-          style={{
-            gridTemplateColumns: "repeat(3, 1fr)",
-          }}
+          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))" }}
         >
           {Array.from({ length: 18 }).map((_, i) => (
             <div
@@ -163,9 +208,7 @@ export default function CosmeticsSection() {
       {!loading && paged.length > 0 && (
         <div
           className="grid gap-3"
-          style={{
-            gridTemplateColumns: "repeat(3, 1fr)",
-          }}
+          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))" }}
         >
           {paged.map((item) => {
             const rarity = item.rarity?.value?.toLowerCase() ?? "common";
@@ -174,6 +217,8 @@ export default function CosmeticsSection() {
             const imgSrc = item.images?.icon ?? item.images?.smallIcon;
             const nameFa = getItemNameFa(item.name);
             const isHovered = hoveredId === item.id;
+            const isNew = newItemIds.has(item.id);
+            const age = daysAgo(item.added);
 
             return (
               <div
@@ -211,6 +256,23 @@ export default function CosmeticsSection() {
                   />
                 )}
 
+                {/* New badge */}
+                {isNew && !isHovered && !isOwned && (
+                  <span
+                    className="absolute"
+                    style={{
+                      top: 5, left: 5,
+                      fontSize: 9, fontWeight: 800,
+                      padding: "2px 5px", borderRadius: 5,
+                      background: "#10b981",
+                      color: "#fff",
+                      zIndex: 5,
+                    }}
+                  >
+                    {age !== null && age <= 7 ? `${age}روز` : "🆕"}
+                  </span>
+                )}
+
                 {/* Owned overlay (only when not hovered) */}
                 {isOwned && !isHovered && (
                   <div
@@ -221,11 +283,11 @@ export default function CosmeticsSection() {
                   </div>
                 )}
 
-                {/* Hover overlay — shows action text in rarity color */}
+                {/* Hover overlay */}
                 {isHovered && (
                   <div
-                    className="absolute inset-0 flex items-center justify-center transition-opacity"
-                    style={{ background: "#00000078" }}
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-1 transition-opacity"
+                    style={{ background: "#00000085" }}
                   >
                     <span
                       className="text-xs font-bold"
@@ -233,6 +295,20 @@ export default function CosmeticsSection() {
                     >
                       {isOwned ? "دارم ✓" : "+ دارم"}
                     </span>
+                    <a
+                      href={fortniteGgUrl(item.id)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        fontSize: 10,
+                        color: "rgba(255,255,255,0.6)",
+                        textDecoration: "none",
+                        marginTop: 2,
+                      }}
+                    >
+                      🔗 fortnite.gg
+                    </a>
                   </div>
                 )}
 

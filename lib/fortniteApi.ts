@@ -394,3 +394,34 @@ export async function fetchCosmetics(type = "outfit"): Promise<Cosmetic[]> {
     return _cosmeticsCache[type];
   } catch { return []; }
 }
+
+// ── New Cosmetics ─────────────────────────────────────────────────────────────
+export interface NewCosmeticsData {
+  date: string;
+  build: string;
+  items: Cosmetic[];
+}
+
+let _newCosmeticsCache: NewCosmeticsData | null = null;
+
+export async function fetchNewCosmetics(): Promise<NewCosmeticsData | null> {
+  if (_newCosmeticsCache) return _newCosmeticsCache;
+  const data = await tryCORS("https://fortnite-api.com/v2/cosmetics/br/new?language=en");
+  if (!data) return null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const d = (data as any).data;
+    _newCosmeticsCache = { date: d.date ?? "", build: d.build ?? "", items: d.items ?? [] };
+    return _newCosmeticsCache;
+  } catch { return null; }
+}
+
+export function fortniteGgUrl(id: string): string {
+  return `https://fortnite.gg/cosmetics/${id}`;
+}
+
+export function daysAgo(isoDate?: string): number | null {
+  if (!isoDate) return null;
+  const diff = Date.now() - new Date(isoDate).getTime();
+  return Math.floor(diff / 86_400_000);
+}

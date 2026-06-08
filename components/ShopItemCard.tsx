@@ -7,6 +7,7 @@ import {
   translateRarity,
   translateType,
   formatVBucks,
+  fortniteGgUrl,
 } from "@/lib/fortniteApi";
 
 interface Props {
@@ -125,6 +126,28 @@ export default function ShopItemCard({ item, isFavorite, onToggleFavorite }: Pro
         }}>
         {isFavorite ? "⭐" : "☆"}
       </button>
+
+      {/* Fortnite.gg link */}
+      <a
+        href={fortniteGgUrl(item.id)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: "absolute", top: 8, left: item.isBundle ? 44 : 8, zIndex: 10,
+          width: 28, height: 28, borderRadius: "50%",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 12,
+          background: "rgba(0,0,0,0.6)",
+          border: "none", cursor: "pointer", textDecoration: "none",
+          opacity: hovered ? 1 : 0,
+          color: "rgba(255,255,255,0.7)",
+          transition: "all 0.2s ease",
+        }}
+        title="مشاهده در Fortnite.gg"
+      >
+        🔗
+      </a>
 
       {/* Bundle badge */}
       {item.isBundle && (
