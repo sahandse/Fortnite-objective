@@ -146,11 +146,12 @@ export async function fetchFortniteNews(): Promise<FortniteNews[]> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const motds = (data as any)?.data?.motds ?? (data as any)?.data?.news?.motds ?? [];
+    if (!motds.length) return getFallbackNews();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return motds.slice(0, 6).map((m: any) => ({
+    return motds.slice(0, 8).map((m: any) => ({
       id:    m.id    ?? String(Math.random()),
-      title: m.title ?? "",
-      body:  m.body  ?? m.tabTitle ?? "",
+      title: translateNewsFa(m.title ?? ""),
+      body:  translateNewsFa(m.body ?? m.tabTitle ?? ""),
       image: m.image ?? m.largeImage ?? "",
     }));
   } catch { return getFallbackNews(); }
@@ -414,6 +415,86 @@ export async function fetchNewCosmetics(): Promise<NewCosmeticsData | null> {
     _newCosmeticsCache = { date: d.date ?? "", build: d.build ?? "", items: d.items ?? [] };
     return _newCosmeticsCache;
   } catch { return null; }
+}
+
+// ── Jam Tracks ────────────────────────────────────────────────────────────────
+export interface JamTrack {
+  id: string;
+  devName: string;
+  track: {
+    id: string;
+    title: string;
+    artist: string;
+    album?: string;
+    albumArt?: string;
+    releaseYear?: number;
+    bpm: number;
+    duration: number;
+    difficulty: {
+      vocals?: number;
+      guitar?: number;
+      bass?: number;
+      plasticBass?: number;
+      drums?: number;
+      plasticDrums?: number;
+    };
+    genres?: string[];
+    rating?: string;
+    spotifyId?: string;
+    isInstrumental?: boolean;
+  };
+  images?: { artwork?: string };
+  added?: string;
+}
+
+let _jamTracksCache: JamTrack[] | null = null;
+
+export async function fetchJamTracks(): Promise<JamTrack[]> {
+  if (_jamTracksCache) return _jamTracksCache;
+  const data = await tryCORS("https://fortnite-api.com/v1/jamtracks?language=en");
+  if (!data) return getFallbackJamTracks();
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = (data as any).data;
+    const arr: JamTrack[] = Array.isArray(raw) ? raw : [];
+    if (arr.length === 0) return getFallbackJamTracks();
+    // Sort newest first
+    arr.sort((a, b) => new Date(b.added ?? 0).getTime() - new Date(a.added ?? 0).getTime());
+    _jamTracksCache = arr;
+    return arr;
+  } catch { return getFallbackJamTracks(); }
+}
+
+function getFallbackJamTracks(): JamTrack[] {
+  return [
+    { id: "jt1", devName: "", track: { id: "jt1", title: "Levitating", artist: "Dua Lipa", bpm: 103, duration: 203, difficulty: { vocals: 3, guitar: 3, bass: 2, drums: 4 }, genres: ["Pop"] }, added: "2024-09-01" },
+    { id: "jt2", devName: "", track: { id: "jt2", title: "Blinding Lights", artist: "The Weeknd", bpm: 171, duration: 200, difficulty: { vocals: 4, guitar: 4, bass: 3, drums: 4 }, genres: ["Pop", "Synthwave"] }, added: "2024-09-02" },
+    { id: "jt3", devName: "", track: { id: "jt3", title: "Stressed Out", artist: "Twenty One Pilots", bpm: 169, duration: 201, difficulty: { vocals: 4, guitar: 3, bass: 3, drums: 5 }, genres: ["Alternative"] }, added: "2024-09-03" },
+    { id: "jt4", devName: "", track: { id: "jt4", title: "Shape of You", artist: "Ed Sheeran", bpm: 96, duration: 234, difficulty: { vocals: 3, guitar: 2, bass: 2, drums: 3 }, genres: ["Pop"] }, added: "2024-09-04" },
+  ];
+}
+
+// ── News translation helpers ──────────────────────────────────────────────────
+const NEWS_TERMS: Record<string, string> = {
+  "Season": "فصل", "Battle Pass": "بتل‌پاس", "Update": "آپدیت",
+  "New": "جدید", "Limited": "محدود", "Event": "رویداد",
+  "Challenge": "چالش", "Week": "هفته", "Crew Pack": "کرو‌پک",
+  "UNVAULTED": "از طاقچه برگشت", "Item Shop": "آیتم‌شاپ",
+  "Free": "رایگان", "Reward": "جایزه", "Ranked": "رنک‌دار",
+  "Victory": "پیروزی", "Royale": "رویال", "Bundle": "بسته",
+  "Skin": "اسکین", "Outfit": "پوشاک", "Emote": "احساسات",
+  "Festival": "فستیوال", "Chapter": "فصل", "Available": "موجود",
+  "now": "اکنون", "today": "امروز", "daily": "روزانه",
+  "weekly": "هفتگی", "exclusive": "انحصاری", "time": "زمان",
+};
+
+export function translateNewsFa(text: string): string {
+  if (!text) return text;
+  let result = text;
+  for (const [en, fa] of Object.entries(NEWS_TERMS)) {
+    result = result.replace(new RegExp(`\\b${en}\\b`, "gi"), fa);
+  }
+  return result;
 }
 
 export function fortniteGgUrl(id: string): string {

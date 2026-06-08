@@ -18,10 +18,9 @@ import WeaponsSection from "./WeaponsSection";
 import NewsSection from "./NewsSection";
 import MapSection from "./MapSection";
 import CosmeticsSection from "./CosmeticsSection";
-import StatsSection from "./StatsSection";
-import ToolsSection from "./ToolsSection";
+import JamTracksSection from "./JamTracksSection";
 
-type Tab = "objectives" | "shop" | "weapons" | "news" | "map" | "cosmetics" | "stats" | "tools";
+type Tab = "objectives" | "shop" | "weapons" | "news" | "map" | "cosmetics" | "jamtracks";
 
 const TAB_DEFS: { key: Tab; label: string; icon: string }[] = [
   { key: "objectives", label: "اهداف",    icon: "🎯" },
@@ -30,8 +29,7 @@ const TAB_DEFS: { key: Tab; label: string; icon: string }[] = [
   { key: "news",       label: "اخبار",    icon: "📢" },
   { key: "map",        label: "نقشه",     icon: "🗺️" },
   { key: "cosmetics",  label: "اسکین‌ها", icon: "🎨" },
-  { key: "stats",      label: "آمار",     icon: "📊" },
-  { key: "tools",      label: "ابزار",    icon: "🔧" },
+  { key: "jamtracks",  label: "جم‌ترک",   icon: "🎵" },
 ];
 
 export default function FortniteApp() {
@@ -463,25 +461,14 @@ export default function FortniteApp() {
           </div>
         )}
 
-        {/* ── STATS ── */}
-        {activeTab === "stats" && (
+        {/* ── JAM TRACKS ── */}
+        {activeTab === "jamtracks" && (
           <div className="tab-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
-              <h2 className="section-title">آمار و لینک‌های مفید</h2>
-              <p className="section-sub">جستجوی بازیکن · سایت‌های فورتنایت</p>
+              <h2 className="section-title">جم‌ترک‌های فستیوال</h2>
+              <p className="section-sub">آهنگ‌های موجود در Fortnite Festival · سختی ابزار</p>
             </div>
-            <StatsSection />
-          </div>
-        )}
-
-        {/* ── TOOLS ── */}
-        {activeTab === "tools" && (
-          <div className="tab-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div>
-              <h2 className="section-title">ابزارها</h2>
-              <p className="section-sub">ماشین‌حساب V-Bucks · پکیج‌ها · کدهای تمرین Creative</p>
-            </div>
-            <ToolsSection />
+            <JamTracksSection />
           </div>
         )}
       </main>
