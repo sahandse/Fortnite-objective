@@ -2,4 +2,4 @@
 2:I[39756,["/Fortnite-objective/_next/static/chunks/158myu8e_yme3.js"],"default"]
 3:I[37457,["/Fortnite-objective/_next/static/chunks/158myu8e_yme3.js"],"default"]
 4:[]
-0:{"rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"isPartial":false,"staleTime":300,"varyParams":"$W4","buildId":"90SdyvONxIqoH1-Hoe_n-"}
+0:{"rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"isPartial":false,"staleTime":300,"varyParams":"$W4","buildId":"fnd6E4y5mikdJqoE9od5y"}
