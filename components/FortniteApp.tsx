@@ -19,17 +19,19 @@ import NewsSection from "./NewsSection";
 import MapSection from "./MapSection";
 import CosmeticsSection from "./CosmeticsSection";
 import JamTracksSection from "./JamTracksSection";
+import GuidesSection from "./GuidesSection";
 
-type Tab = "objectives" | "shop" | "weapons" | "news" | "map" | "cosmetics" | "jamtracks";
+type Tab = "objectives" | "shop" | "weapons" | "news" | "map" | "cosmetics" | "jamtracks" | "guides";
 
 const TAB_DEFS: { key: Tab; label: string; icon: string }[] = [
   { key: "objectives", label: "اهداف",    icon: "🎯" },
-  { key: "shop",       label: "آیتم‌شاپ", icon: "🛒" },
+  { key: "shop",       label: "شاپ",      icon: "🛒" },
   { key: "weapons",    label: "سلاح‌ها",  icon: "⚔️" },
   { key: "news",       label: "اخبار",    icon: "📢" },
   { key: "map",        label: "نقشه",     icon: "🗺️" },
   { key: "cosmetics",  label: "اسکین‌ها", icon: "🎨" },
-  { key: "jamtracks",  label: "جم‌ترک",   icon: "🎵" },
+  { key: "jamtracks",  label: "موزیک",    icon: "🎵" },
+  { key: "guides",     label: "راهنما",   icon: "💡" },
 ];
 
 export default function FortniteApp() {
@@ -469,6 +471,17 @@ export default function FortniteApp() {
               <p className="section-sub">آهنگ‌های موجود در Fortnite Festival · سختی ابزار</p>
             </div>
             <JamTracksSection />
+          </div>
+        )}
+
+        {/* ── GUIDES ── */}
+        {activeTab === "guides" && (
+          <div className="tab-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div>
+              <h2 className="section-title">راهنمای بازی</h2>
+              <p className="section-sub">V-Bucks · مودها · کدهای تمرین · نکات حرفه‌ای</p>
+            </div>
+            <GuidesSection />
           </div>
         )}
       </main>

@@ -506,3 +506,44 @@ export function daysAgo(isoDate?: string): number | null {
   const diff = Date.now() - new Date(isoDate).getTime();
   return Math.floor(diff / 86_400_000);
 }
+
+// ── Playlists / Game Modes ────────────────────────────────────────────────────
+export interface Playlist {
+  id: string;
+  name: string;
+  subName?: string;
+  description?: string;
+  gameType?: string;
+  ratingType?: string;
+  maxTeamSize?: number;
+  images?: { showcase?: string; missionIcon?: string };
+  added?: string;
+}
+
+let _playlistsCache: Playlist[] | null = null;
+
+export async function fetchPlaylists(): Promise<Playlist[]> {
+  if (_playlistsCache) return _playlistsCache;
+  const data = await tryCORS("https://fortnite-api.com/v2/playlists?language=en");
+  if (!data) return getFallbackPlaylists();
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = (data as any).data;
+    const arr: Playlist[] = Array.isArray(raw) ? raw : [];
+    if (arr.length === 0) return getFallbackPlaylists();
+    _playlistsCache = arr;
+    return arr;
+  } catch { return getFallbackPlaylists(); }
+}
+
+function getFallbackPlaylists(): Playlist[] {
+  return [
+    { id: "Playlist_DefaultSolo", name: "Battle Royale Solo", subName: "Solo", description: "بقا - ۱۰۰ بازیکن", gameType: "Core", maxTeamSize: 1 },
+    { id: "Playlist_DefaultDuo", name: "Battle Royale Duos", subName: "Duo", description: "به صورت دونفره بجنگ", gameType: "Core", maxTeamSize: 2 },
+    { id: "Playlist_DefaultSquad", name: "Battle Royale Squads", subName: "Squads", description: "تیم ۴ نفره", gameType: "Core", maxTeamSize: 4 },
+    { id: "Playlist_ShowdownAlt_Solo", name: "Zero Build Solo", subName: "No Build", description: "بدون ساختن - Solo", gameType: "Core", maxTeamSize: 1 },
+    { id: "Playlist_ShowdownAlt_Squad", name: "Zero Build Squads", subName: "No Build", description: "بدون ساختن - Squads", gameType: "Core", maxTeamSize: 4 },
+    { id: "Playlist_Ranked_Solo", name: "Ranked Battle Royale", subName: "Ranked", description: "مود رنک‌دار - Solo", gameType: "Ranked", maxTeamSize: 1 },
+    { id: "Playlist_Ranked_NoBuild", name: "Ranked Zero Build", subName: "Ranked No Build", description: "رنک‌دار بدون ساختن", gameType: "Ranked", maxTeamSize: 1 },
+  ];
+}
