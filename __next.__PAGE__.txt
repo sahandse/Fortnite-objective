@@ -2,5 +2,5 @@
 2:I[13492,["/Fortnite-objective/_next/static/chunks/158myu8e_yme3.js","/Fortnite-objective/_next/static/chunks/3s0fr4-qdw8f2.js"],"default"]
 3:I[97367,["/Fortnite-objective/_next/static/chunks/158myu8e_yme3.js"],"OutletBoundary"]
 4:"$Sreact.suspense"
-0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{}],[["$","script","script-0",{"src":"/Fortnite-objective/_next/static/chunks/3s0fr4-qdw8f2.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"fnd6E4y5mikdJqoE9od5y"}
+0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{}],[["$","script","script-0",{"src":"/Fortnite-objective/_next/static/chunks/3s0fr4-qdw8f2.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"QH373zXfgnCmM_4ExSJFu"}
 5:null
