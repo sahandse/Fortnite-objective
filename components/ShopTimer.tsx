@@ -11,10 +11,11 @@ export default function ShopTimer() {
       const next = new Date(now);
       next.setUTCHours(24, 0, 0, 0);
       const diff = Math.max(0, next.getTime() - now.getTime());
-      const h = Math.floor(diff / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      setTimeLeft({ h, m, s });
+      setTimeLeft({
+        h: Math.floor(diff / 3600000),
+        m: Math.floor((diff % 3600000) / 60000),
+        s: Math.floor((diff % 60000) / 1000),
+      });
     }
     calc();
     const id = setInterval(calc, 1000);
@@ -24,21 +25,28 @@ export default function ShopTimer() {
   const pad = (n: number) => String(n).padStart(2, "0");
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2 rounded-xl"
-      style={{ background: "#111827", border: "1px solid #1f2937" }}>
-      <span className="text-sm text-gray-400">ریست شاپ</span>
-      <div className="flex items-center gap-1 font-mono font-bold text-sm">
+    <div style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 8,
+      padding: "6px 13px",
+      borderRadius: 10,
+      background: "rgba(255,255,255,0.04)",
+      border: "1px solid rgba(255,255,255,0.07)",
+    }}>
+      <span style={{ fontSize: 11, color: "var(--c-dim)", whiteSpace: "nowrap" }}>ریست شاپ</span>
+      <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.09)" }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 2, fontFamily: "monospace" }}>
         {[timeLeft.h, timeLeft.m, timeLeft.s].map((val, i) => (
-          <span key={i} className="flex items-center gap-1">
-            <span className="px-2 py-1 rounded-lg text-white"
-              style={{ background: "#1f2937", minWidth: "32px", textAlign: "center" }}>
+          <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "var(--c-text)", letterSpacing: "-0.02em", minWidth: 22, textAlign: "center" }}>
               {pad(val)}
             </span>
-            {i < 2 && <span style={{ color: "#00d4ff" }}>:</span>}
+            {i < 2 && <span style={{ color: "var(--c-blue)", fontSize: 13, fontWeight: 700 }}>:</span>}
           </span>
         ))}
       </div>
-      <span className="text-xs text-gray-500">UTC</span>
+      <span style={{ fontSize: 10, color: "var(--c-dim)" }}>UTC</span>
     </div>
   );
 }

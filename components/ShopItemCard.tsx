@@ -6,7 +6,6 @@ import {
   getRarityColor,
   translateRarity,
   translateType,
-  translateSection,
   formatVBucks,
 } from "@/lib/fortniteApi";
 
@@ -17,47 +16,52 @@ interface Props {
 }
 
 const TYPE_EMOJI: Record<string, string> = {
-  outfit:   "👤",
-  emote:    "💃",
-  pickaxe:  "⛏️",
-  glider:   "🪂",
-  wrap:     "🎨",
-  backpack: "🎒",
-  contrail: "✨",
-  spray:    "🖌️",
-  loading:  "🖼️",
-  banner:   "🏳️",
-  toy:      "🎮",
-  music:    "🎵",
-  bundle:   "📦",
+  outfit: "👤", emote: "💃", pickaxe: "⛏️", glider: "🪂",
+  wrap: "🎨", backpack: "🎒", contrail: "✨", spray: "🖌️",
+  loading: "🖼️", banner: "🏳️", toy: "🎮", music: "🎵", bundle: "📦",
 };
 
 export default function ShopItemCard({ item, isFavorite, onToggleFavorite }: Props) {
   const [imgState, setImgState] = useState<"loading" | "ok" | "error">("loading");
-  const rarityColor = getRarityColor(item.rarity);
+  const [hovered, setHovered] = useState(false);
+  const rColor = getRarityColor(item.rarity);
   const imageSrc = item.images.featured ?? item.images.icon ?? item.images.smallIcon;
   const emoji = TYPE_EMOJI[item.type] ?? "🎮";
 
   return (
     <div
-      className="shop-card group"
+      className="shop-card"
       style={{
-        border: `2px solid ${rarityColor}70`,
-        background: `linear-gradient(160deg, ${rarityColor}18 0%, #0f172a 100%)`,
-      }}>
+        border: `1px solid ${rColor}30`,
+        background: `linear-gradient(165deg, ${rColor}13 0%, #050810 100%)`,
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Rarity top accent line */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, height: 2, zIndex: 2,
+        background: `linear-gradient(90deg, ${rColor}cc, transparent)`,
+        borderRadius: "14px 14px 0 0",
+      }} />
 
-      {/* ── Image / Placeholder ── */}
+      {/* Image / placeholder */}
       {imageSrc ? (
         <>
-          {/* Placeholder shown while image loads or on error */}
           {imgState !== "ok" && (
-            <div
-              className="absolute inset-0 flex flex-col items-center justify-center gap-2"
-              style={{ background: `linear-gradient(160deg, ${rarityColor}25, #0f172a)` }}>
-              <span className="text-5xl">{emoji}</span>
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10,
+              background: `linear-gradient(165deg, ${rColor}20, #050810)`,
+            }}>
+              <span style={{ fontSize: 40, lineHeight: 1 }}>{emoji}</span>
               {imgState === "loading" && (
-                <div className="w-6 h-6 rounded-full border-2 animate-spin"
-                  style={{ borderColor: `${rarityColor}40`, borderTopColor: rarityColor }} />
+                <div style={{
+                  width: 20, height: 20, borderRadius: "50%",
+                  border: `2px solid ${rColor}30`,
+                  borderTopColor: rColor,
+                  animation: "spin 0.75s linear infinite",
+                }} />
               )}
             </div>
           )}
@@ -65,96 +69,99 @@ export default function ShopItemCard({ item, isFavorite, onToggleFavorite }: Pro
           <img
             src={imageSrc}
             alt={item.nameFa || item.name}
-            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
-            style={{ opacity: imgState === "ok" ? 1 : 0 }}
+            crossOrigin="anonymous"
+            style={{
+              position: "absolute", inset: 0,
+              width: "100%", height: "100%",
+              objectFit: "cover",
+              opacity: imgState === "ok" ? 1 : 0,
+              transition: "opacity 0.35s ease",
+            }}
             onLoad={() => setImgState("ok")}
             onError={() => setImgState("error")}
-            crossOrigin="anonymous"
           />
         </>
       ) : (
-        /* No URL at all → permanent emoji placeholder */
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center gap-3"
-          style={{ background: `linear-gradient(160deg, ${rarityColor}22, #0f172a)` }}>
-          <span className="text-6xl drop-shadow-lg">{emoji}</span>
-          <span className="text-xs font-medium px-2 text-center leading-tight"
-            style={{ color: rarityColor }}>
+        <div style={{
+          position: "absolute", inset: 0,
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
+          background: `linear-gradient(165deg, ${rColor}18, #050810)`,
+        }}>
+          <span style={{ fontSize: 46, lineHeight: 1 }}>{emoji}</span>
+          <span style={{
+            fontSize: 11, fontWeight: 600, color: rColor,
+            textAlign: "center", padding: "0 10px", lineHeight: 1.4,
+          }}>
             {item.nameFa || item.name}
           </span>
         </div>
       )}
 
-      {/* ── Dark gradient overlay ── */}
-      <div className="absolute inset-0"
-        style={{ background: "linear-gradient(to bottom, transparent 45%, rgba(5,10,25,0.97) 100%)" }} />
+      {/* Gradient overlay */}
+      <div style={{
+        position: "absolute", inset: 0, zIndex: 1,
+        background: "linear-gradient(to bottom, transparent 35%, rgba(3,5,14,0.97) 100%)",
+      }} />
 
-      {/* ── Rarity top bar ── */}
-      <div className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
-        style={{ background: `linear-gradient(90deg, ${rarityColor}, transparent)` }} />
+      {/* Hover glow */}
+      <div className="shop-card-glow" style={{
+        boxShadow: `inset 0 0 35px ${rColor}22`,
+        opacity: hovered ? 1 : 0,
+      }} />
 
-      {/* ── Favorite button ── */}
+      {/* Favorite button */}
       <button
         onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id); }}
-        className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full flex items-center justify-center text-sm transition-all"
         style={{
-          background: "rgba(0,0,0,0.7)",
-          opacity: isFavorite ? 1 : 0,
-          color: isFavorite ? "#ffd700" : "#9ca3af",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-        onMouseLeave={(e) => (e.currentTarget.style.opacity = isFavorite ? "1" : "0")}>
+          position: "absolute", top: 8, right: 8, zIndex: 10,
+          width: 28, height: 28, borderRadius: "50%",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 14,
+          background: "rgba(0,0,0,0.6)",
+          border: "none", cursor: "pointer",
+          opacity: isFavorite || hovered ? 1 : 0,
+          color: isFavorite ? "#f0b429" : "rgba(255,255,255,0.5)",
+          transition: "all 0.2s ease",
+        }}>
         {isFavorite ? "⭐" : "☆"}
       </button>
 
-      {/* ── Bundle badge ── */}
+      {/* Bundle badge */}
       {item.isBundle && (
-        <span className="absolute top-2 left-2 z-20 text-xs font-bold px-1.5 py-0.5 rounded"
-          style={{ background: "#ffd700", color: "#000" }}>
+        <span style={{
+          position: "absolute", top: 8, left: 8, zIndex: 10,
+          fontSize: 10, fontWeight: 800,
+          padding: "2px 7px", borderRadius: 6,
+          background: "#f0b429", color: "#000",
+        }}>
           بسته
         </span>
       )}
 
-      {/* ── Bottom info ── */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 p-2 space-y-1">
-        {/* Section label */}
-        {item.section && (
-          <div className="text-xs" style={{ color: `${rarityColor}cc` }}>
-            {translateSection(item.section)}
-          </div>
-        )}
-
-        {/* Name */}
-        <div className="font-bold text-white leading-tight text-sm line-clamp-2">
+      {/* Bottom info */}
+      <div style={{
+        position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 2,
+        padding: "8px 10px 10px",
+      }}>
+        <div style={{
+          fontWeight: 700, color: "#fff", fontSize: 13,
+          lineHeight: 1.35, marginBottom: 5,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}>
           {item.nameFa || item.name}
         </div>
-
-        {/* Type + Rarity */}
-        <div className="flex items-center justify-between gap-1">
-          <span className="text-xs" style={{ color: rarityColor }}>
-            {translateRarity(item.rarity)}
-          </span>
-          <span className="text-xs text-gray-400">
-            {translateType(item.type)}
-          </span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
+          <span style={{ fontSize: 11, color: rColor, fontWeight: 600 }}>{translateRarity(item.rarity)}</span>
+          <span style={{ fontSize: 11, color: "var(--c-dim)" }}>{translateType(item.type)}</span>
         </div>
-
-        {/* Price */}
-        <div className="flex items-center gap-1">
-          <span className="text-xs font-black"
-            style={{ background: "linear-gradient(90deg,#00d4ff,#6ee7f7)",
-                     WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            V
-          </span>
-          <span className="font-bold text-white text-sm">
-            {formatVBucks(item.price)}
-          </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span className="text-vbucks" style={{ fontSize: 13, fontWeight: 900, lineHeight: 1 }}>V</span>
+          <span style={{ fontWeight: 800, color: "#fff", fontSize: 14 }}>{formatVBucks(item.price)}</span>
         </div>
       </div>
-
-      {/* ── Hover glow ── */}
-      <div className="absolute inset-0 pointer-events-none rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-        style={{ boxShadow: `inset 0 0 25px ${rarityColor}35` }} />
     </div>
   );
 }

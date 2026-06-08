@@ -23,6 +23,17 @@ import ToolsSection from "./ToolsSection";
 
 type Tab = "objectives" | "shop" | "weapons" | "news" | "map" | "cosmetics" | "stats" | "tools";
 
+const TAB_DEFS: { key: Tab; label: string; icon: string }[] = [
+  { key: "objectives", label: "اهداف",    icon: "🎯" },
+  { key: "shop",       label: "آیتم‌شاپ", icon: "🛒" },
+  { key: "weapons",    label: "سلاح‌ها",  icon: "⚔️" },
+  { key: "news",       label: "اخبار",    icon: "📢" },
+  { key: "map",        label: "نقشه",     icon: "🗺️" },
+  { key: "cosmetics",  label: "اسکین‌ها", icon: "🎨" },
+  { key: "stats",      label: "آمار",     icon: "📊" },
+  { key: "tools",      label: "ابزار",    icon: "🔧" },
+];
+
 export default function FortniteApp() {
   const [activeTab, setActiveTab] = useState<Tab>("objectives");
   const [search, setSearch] = useState("");
@@ -39,7 +50,6 @@ export default function FortniteApp() {
   const [news, setNews] = useState<FortniteNews[]>([]);
   const [newsLoading, setNewsLoading] = useState(false);
 
-  // Load persisted state
   useEffect(() => {
     try {
       const fav = localStorage.getItem("fn-favorites");
@@ -99,24 +109,19 @@ export default function FortniteApp() {
     if (activeTab === "news" && news.length === 0) loadNews();
   }, [activeTab, news.length, loadNews]);
 
-  const filteredQuests = useMemo(() => {
-    return QUESTS.filter((q) => {
-      const matchesSearch =
-        !search ||
-        q.titleFa.includes(search) ||
-        q.titleEn.toLowerCase().includes(search.toLowerCase()) ||
-        q.descriptionFa.includes(search) ||
-        q.tags.some((t) => t.includes(search.toLowerCase()));
-
-      const matchesCategory =
-        activeCategory === "all" ||
-        (activeCategory === "favorites" && favorites.has(q.id)) ||
-        (activeCategory === "completed" && completed.has(q.id)) ||
-        q.category === activeCategory;
-
-      return matchesSearch && matchesCategory;
-    });
-  }, [search, activeCategory, favorites, completed]);
+  const filteredQuests = useMemo(() => QUESTS.filter((q) => {
+    const matchesSearch = !search ||
+      q.titleFa.includes(search) ||
+      q.titleEn.toLowerCase().includes(search.toLowerCase()) ||
+      q.descriptionFa.includes(search) ||
+      q.tags.some((t) => t.includes(search.toLowerCase()));
+    const matchesCategory =
+      activeCategory === "all" ||
+      (activeCategory === "favorites" && favorites.has(q.id)) ||
+      (activeCategory === "completed" && completed.has(q.id)) ||
+      q.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  }), [search, activeCategory, favorites, completed]);
 
   const filteredShop = useMemo(() => {
     if (shopFilter === "all") return shopItems;
@@ -126,9 +131,7 @@ export default function FortniteApp() {
 
   const questCounts = useMemo(() => {
     const counts: Record<string, number> = {
-      all: QUESTS.length,
-      favorites: favorites.size,
-      completed: completed.size,
+      all: QUESTS.length, favorites: favorites.size, completed: completed.size,
     };
     for (const cat of Object.keys(QUEST_CATEGORIES)) {
       counts[cat] = QUESTS.filter((q) => q.category === cat).length;
@@ -145,80 +148,101 @@ export default function FortniteApp() {
   const totalXp = filteredQuests.reduce((s, q) => s + q.xpReward, 0);
   const earnedXp = filteredQuests.filter((q) => completed.has(q.id)).reduce((s, q) => s + q.xpReward, 0);
 
-  const TABS: { key: Tab; label: string; icon: string; badge?: number }[] = [
-    { key: "objectives", label: "اهداف",    icon: "🎯", badge: newQuestCount },
-    { key: "shop",       label: "آیتم‌شاپ", icon: "🛒" },
-    { key: "weapons",    label: "سلاح‌ها",  icon: "⚔️" },
-    { key: "news",       label: "اخبار",    icon: "📢" },
-    { key: "map",        label: "نقشه",     icon: "🗺️" },
-    { key: "cosmetics",  label: "اسکین‌ها", icon: "🎨" },
-    { key: "stats",      label: "آمار",     icon: "📊" },
-    { key: "tools",      label: "ابزار",    icon: "🔧" },
-  ];
+  const currentTab = TAB_DEFS.find((t) => t.key === activeTab)!;
+  const isRefreshable = refreshing || shopLoading;
+
+  const handleRefresh = () => {
+    loadShop(true);
+    if (activeTab === "news") loadNews();
+  };
 
   return (
-    <div className="min-h-screen" style={{ background: "#0a0e1a", fontFamily: "'Vazirmatn', sans-serif" }}>
-      {/* Header */}
-      <header className="sticky top-0 z-50" style={{ background: "rgba(10,14,26,0.96)", backdropFilter: "blur(12px)", borderBottom: "1px solid #1f2937" }}>
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Logo */}
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center text-lg"
-                style={{ background: "linear-gradient(135deg, #00d4ff, #8b5cf6)" }}>
-                🎮
-              </div>
-              <div className="hidden sm:block">
-                <div className="font-bold text-sm leading-tight"
-                  style={{ background: "linear-gradient(135deg, #00d4ff, #8b5cf6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                  فورتنایت
-                </div>
-                <div className="text-xs text-gray-500">فصل ۲ · فصل ۷</div>
-              </div>
+    <div style={{ background: "var(--c-base)", minHeight: "100dvh" }}>
+      {/* ══ HEADER ══════════════════════════════════════════════════ */}
+      <header style={{
+        position: "sticky", top: 0, zIndex: 50,
+        background: "rgba(5,7,15,0.96)",
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
+        borderBottom: "1px solid var(--c-border)",
+        height: "var(--header-h)",
+      }}>
+        <div style={{
+          maxWidth: 1400, margin: "0 auto",
+          padding: "0 16px", height: "100%",
+          display: "flex", alignItems: "center", gap: 12,
+        }}>
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+              background: "linear-gradient(135deg, #00c9f5, #7c3aed)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 18, boxShadow: "0 0 16px rgba(0,201,245,0.25)",
+            }}>
+              🎮
             </div>
-
-            {/* Tabs — scrollable for 8 tabs */}
-            <div className="tabs-scroll flex items-center gap-1 rounded-xl p-1 flex-1 min-w-0" style={{ background: "#111827" }}>
-              {TABS.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className="relative flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-medium transition-all shrink-0"
-                  style={activeTab === tab.key
-                    ? { background: "linear-gradient(135deg,#00d4ff30,#8b5cf630)", color: "#fff", border: "1px solid #00d4ff40" }
-                    : { color: "#6b7280" }}>
-                  <span>{tab.icon}</span>
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  {tab.badge && tab.badge > 0 && (
-                    <span className="absolute -top-1 -left-1 w-4 h-4 rounded-full flex items-center justify-center font-bold"
-                      style={{ background: "#ef4444", color: "#fff", fontSize: "9px" }}>
-                      {tab.badge}
-                    </span>
-                  )}
-                </button>
-              ))}
+            <div className="hidden sm:block">
+              <div className="text-gradient" style={{ fontWeight: 800, fontSize: 15, lineHeight: 1.2 }}>
+                فورتنایت
+              </div>
+              <div style={{ fontSize: 10, color: "var(--c-dim)" }}>فصل ۲ · فصل ۷</div>
             </div>
+          </div>
 
-            {/* Refresh + Timer */}
-            <div className="flex items-center gap-2 shrink-0">
-              <ShopTimer />
+          {/* Desktop tab bar */}
+          <div className="tab-bar hidden md:flex" style={{ flex: 1 }}>
+            {TAB_DEFS.map((tab) => (
               <button
-                onClick={() => { loadShop(true); if (activeTab === "news") loadNews(); }}
-                disabled={refreshing || shopLoading}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-                style={{ background: "#00d4ff15", border: "1px solid #00d4ff40", color: refreshing ? "#6b7280" : "#00d4ff" }}>
-                <span className={refreshing ? "animate-spin" : ""}>🔄</span>
-                <span className="hidden sm:inline">{refreshing ? "..." : "بروزرسانی"}</span>
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`tab-btn${activeTab === tab.key ? " active" : ""}`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+                {tab.key === "objectives" && newQuestCount > 0 && (
+                  <span className="tab-badge">{newQuestCount}</span>
+                )}
               </button>
+            ))}
+          </div>
+
+          {/* Mobile: current tab name */}
+          <div className="flex-1 text-center md:hidden">
+            <span style={{ fontSize: 15, fontWeight: 700, color: "var(--c-text)" }}>
+              {currentTab.icon} {currentTab.label}
+            </span>
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <div className="hidden sm:block">
+              <ShopTimer />
             </div>
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshable}
+              className="btn-icon"
+              title="بروزرسانی"
+            >
+              <span style={{
+                fontSize: 16,
+                display: "inline-block",
+                animation: refreshing ? "spin 0.7s linear infinite" : "none",
+              }}>
+                🔄
+              </span>
+            </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      {/* ══ MAIN CONTENT ════════════════════════════════════════════ */}
+      <main className="main-content">
+
         {/* ── OBJECTIVES ── */}
         {activeTab === "objectives" && (
-          <div className="space-y-5">
+          <div className="tab-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <SearchBar value={search} onChange={setSearch} />
             <CategoryFilter
               activeCategory={activeCategory}
@@ -228,31 +252,31 @@ export default function FortniteApp() {
               completedCount={completed.size}
             />
 
-            {/* XP Progress */}
-            <div className="rounded-xl p-4" style={{ background: "#111827", border: "1px solid #1f2937" }}>
-              <div className="flex items-center justify-between mb-2 text-sm">
-                <span className="text-gray-400">XP کسب‌شده از نمایش فعلی</span>
-                <span className="font-bold" style={{ color: "#ffd700" }}>
+            {/* XP progress card */}
+            <div className="card" style={{ padding: "16px 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+                <span style={{ fontSize: 13, color: "var(--c-muted)" }}>پیشرفت XP در نمایش فعلی</span>
+                <span className="text-gold" style={{ fontWeight: 800, fontSize: 14 }}>
                   {earnedXp.toLocaleString("fa-IR")} / {totalXp.toLocaleString("fa-IR")} XP
                 </span>
               </div>
               <div className="progress-bar">
                 <div className="progress-fill" style={{ width: totalXp > 0 ? `${(earnedXp / totalXp) * 100}%` : "0%" }} />
               </div>
-              <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                <span>{filteredQuests.length} هدف نمایش داده‌شده</span>
-                <span>{completed.size} انجام شده از {QUESTS.length}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 12, color: "var(--c-dim)" }}>
+                <span>{filteredQuests.length} هدف نمایش‌داده‌شده</span>
+                <span>{completed.size} انجام‌شده از {QUESTS.length}</span>
               </div>
             </div>
 
             {filteredQuests.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-                <span className="text-5xl mb-4">🔍</span>
-                <p className="text-lg font-medium">نتیجه‌ای یافت نشد</p>
-                <p className="text-sm mt-1">جستجو یا فیلتر دیگری را امتحان کنید</p>
+              <div style={{ textAlign: "center", padding: "80px 0", color: "var(--c-muted)" }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+                <p style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>نتیجه‌ای یافت نشد</p>
+                <p style={{ fontSize: 13, color: "var(--c-dim)" }}>جستجو یا فیلتر دیگری را امتحان کنید</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 14 }}>
                 {filteredQuests.map((quest) => (
                   <QuestCard
                     key={quest.id}
@@ -270,69 +294,68 @@ export default function FortniteApp() {
 
         {/* ── SHOP ── */}
         {activeTab === "shop" && (
-          <div className="space-y-5">
-            <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="tab-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
               <div>
-                <h2 className="text-xl font-bold text-white">آیتم‌شاپ امروز</h2>
-                <div className="flex items-center gap-2 mt-0.5">
+                <h2 className="section-title">آیتم‌شاپ امروز</h2>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 5 }}>
                   {lastUpdated && (
-                    <p className="text-xs text-gray-400">
-                      آخرین بروزرسانی: {lastUpdated.toLocaleTimeString("fa-IR")}
-                    </p>
+                    <span style={{ fontSize: 12, color: "var(--c-dim)" }}>
+                      {lastUpdated.toLocaleTimeString("fa-IR")}
+                    </span>
                   )}
                   {shopSource && (
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                      style={shopSource === "live"
-                        ? { background: "#052e16", color: "#22c55e", border: "1px solid #22c55e40" }
-                        : { background: "#450a0a", color: "#ef4444", border: "1px solid #ef444440" }}>
+                    <span className={`badge ${shopSource === "live" ? "pill-live" : "pill-offline"}`}>
                       {shopSource === "live" ? "🟢 لایو" : "📦 آفلاین"}
                     </span>
                   )}
                 </div>
               </div>
               {shopItems.length > 0 && (
-                <span className="text-sm text-gray-400">
-                  <span className="text-white font-bold">{filteredShop.length}</span> آیتم
+                <span style={{ fontSize: 13, color: "var(--c-muted)" }}>
+                  <strong style={{ color: "var(--c-text)" }}>{filteredShop.length}</strong> آیتم
                 </span>
               )}
             </div>
 
-            {/* Filter tabs */}
+            {/* Type filter */}
             {shopItems.length > 0 && (
-              <div className="tabs-scroll flex gap-2 pb-1">
+              <div className="tabs-scroll" style={{ display: "flex", gap: 8, paddingBottom: 4 }}>
                 {shopTypes.map((type) => (
                   <button
                     key={type}
                     onClick={() => setShopFilter(type)}
-                    className="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-                    style={shopFilter === type
-                      ? { background: "linear-gradient(135deg, #00d4ff, #8b5cf6)", color: "#000", fontWeight: 700 }
-                      : { background: "#111827", border: "1px solid #1f2937", color: "#6b7280" }}>
-                    {type === "all" ? "همه" : type === "favorites" ? `⭐ علاقه‌مندی‌ها (${favorites.size})` : translateType(type)}
+                    className={`filter-chip${shopFilter === type ? " active" : ""}`}
+                  >
+                    {type === "all" ? "همه" : type === "favorites"
+                      ? `⭐ علاقه‌مندی (${favorites.size})`
+                      : translateType(type)}
                   </button>
                 ))}
               </div>
             )}
 
+            {/* Grid */}
             {shopLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(130px,1fr))", gap: 12 }}>
                 {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={i} className="rounded-xl shimmer" style={{ aspectRatio: "3/4" }} />
+                  <div key={i} className="shimmer" style={{ aspectRatio: "3/4", borderRadius: 14 }} />
                 ))}
               </div>
             ) : shopError ? (
-              <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-                <span className="text-5xl mb-4">⚠️</span>
-                <p className="text-lg font-medium">خطا در بارگذاری</p>
-                <button onClick={() => loadShop()} className="btn-fortnite mt-4">تلاش مجدد</button>
+              <div style={{ textAlign: "center", padding: "80px 0", color: "var(--c-muted)" }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+                <p style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>خطا در بارگذاری</p>
+                <button onClick={() => loadShop()} className="btn btn-primary">تلاش مجدد</button>
               </div>
             ) : filteredShop.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-                <span className="text-5xl mb-4">🛒</span>
+              <div style={{ textAlign: "center", padding: "80px 0", color: "var(--c-muted)" }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>🛒</div>
                 <p>آیتمی یافت نشد</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(130px,1fr))", gap: 12 }}>
                 {filteredShop.map((item) => (
                   <ShopItemCard
                     key={item.id}
@@ -344,23 +367,26 @@ export default function FortniteApp() {
               </div>
             )}
 
-            {/* Live shop link */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 border-t border-gray-800">
+            {/* Footer */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 8, borderTop: "1px solid var(--c-border)", flexWrap: "wrap" }}>
               <a
                 href="https://fortnite.gg/shop"
-                target="_blank"
-                rel="noopener"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all"
-                style={{ background: "linear-gradient(135deg,#00d4ff,#8b5cf6)", color: "#000" }}>
-                🛒 مشاهده شاپ زنده در fortnite.gg
+                target="_blank" rel="noopener"
+                className="btn btn-gradient"
+              >
+                🛒 شاپ زنده در fortnite.gg
               </a>
               {shopSource === "offline" && (
-                <span className="text-xs text-gray-500">
-                  آیتم‌های نمایش‌داده‌شده نمونه هستند — برای شاپ واقعی روز کلیک کنید
+                <span style={{ fontSize: 12, color: "var(--c-dim)" }}>
+                  آیتم‌های نمایشی نمونه هستند
                 </span>
               )}
-              <span className="text-xs text-gray-700 mr-auto hidden sm:block">
-                داده از <a href="https://fortnite-api.com" target="_blank" rel="noopener" className="text-blue-400 hover:underline">fortnite-api.com</a>
+              <span style={{ fontSize: 12, color: "var(--c-dim)", marginRight: "auto" }}>
+                داده از{" "}
+                <a href="https://fortnite-api.com" target="_blank" rel="noopener"
+                  style={{ color: "var(--c-blue)", textDecoration: "none" }}>
+                  fortnite-api.com
+                </a>
               </span>
             </div>
           </div>
@@ -368,19 +394,24 @@ export default function FortniteApp() {
 
         {/* ── WEAPONS ── */}
         {activeTab === "weapons" && (
-          <div className="space-y-5">
+          <div className="tab-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
-              <h2 className="text-xl font-bold text-white">سلاح‌های فصل ۲ فصل ۷</h2>
-              <p className="text-sm text-gray-400 mt-1">رتبه‌بندی بر اساس meta فعلی · آمار بولت‌استاندارد</p>
+              <h2 className="section-title">سلاح‌های فصل ۲ فصل ۷</h2>
+              <p className="section-sub">رتبه‌بندی بر اساس meta فعلی · آمار بولت‌استاندارد</p>
             </div>
-            <div className="flex gap-4 text-xs flex-wrap">
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               {(["S","A","B","C","D"] as const).map((tier) => (
-                <div key={tier} className="flex items-center gap-1.5">
-                  <span className="w-6 h-6 rounded flex items-center justify-center font-bold text-sm"
-                    style={{ background: `${getTierBg(tier)}`, color: getTierColor(tier) }}>
+                <div key={tier} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{
+                    width: 26, height: 26, borderRadius: 7,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontWeight: 800, fontSize: 13,
+                    background: `${TIER_BG[tier]}`, color: TIER_COLOR[tier],
+                    border: `1px solid ${TIER_COLOR[tier]}30`,
+                  }}>
                     {tier}
                   </span>
-                  <span className="text-gray-400">{getTierLabel(tier)}</span>
+                  <span style={{ fontSize: 12, color: "var(--c-muted)" }}>{TIER_LABEL[tier]}</span>
                 </div>
               ))}
             </div>
@@ -390,31 +421,32 @@ export default function FortniteApp() {
 
         {/* ── NEWS ── */}
         {activeTab === "news" && (
-          <div className="space-y-5">
-            <div className="flex items-center justify-between">
+          <div className="tab-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div className="section-header">
               <div>
-                <h2 className="text-xl font-bold text-white">اخبار فورتنایت</h2>
-                <p className="text-sm text-gray-400 mt-1">آخرین رویدادها و به‌روزرسانی‌ها</p>
+                <h2 className="section-title">اخبار فورتنایت</h2>
+                <p className="section-sub">آخرین رویدادها و به‌روزرسانی‌ها</p>
               </div>
-              <button onClick={loadNews} disabled={newsLoading}
-                className="text-sm px-3 py-2 rounded-lg transition-all"
-                style={{ background: "#111827", border: "1px solid #1f2937", color: newsLoading ? "#6b7280" : "#00d4ff" }}>
+              <button onClick={loadNews} disabled={newsLoading} className="btn btn-ghost">
                 {newsLoading ? "..." : "🔄 بروزرسانی"}
               </button>
             </div>
             <NewsSection news={news} loading={newsLoading} />
-            <div className="text-center text-xs text-gray-600 pt-2 border-t border-gray-800">
-              اخبار از <a href="https://fortnite-api.com" target="_blank" rel="noopener" className="text-blue-400 hover:underline">fortnite-api.com</a>
+            <div style={{ textAlign: "center", fontSize: 12, color: "var(--c-dim)", paddingTop: 8, borderTop: "1px solid var(--c-border)" }}>
+              اخبار از{" "}
+              <a href="https://fortnite-api.com" target="_blank" rel="noopener" style={{ color: "var(--c-blue)" }}>
+                fortnite-api.com
+              </a>
             </div>
           </div>
         )}
 
         {/* ── MAP ── */}
         {activeTab === "map" && (
-          <div className="space-y-5">
+          <div className="tab-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
-              <h2 className="text-xl font-bold text-white">نقشه فورتنایت</h2>
-              <p className="text-sm text-gray-400 mt-1">مناطق نقشه · رتبه‌بندی لوت · جستجوی منطقه</p>
+              <h2 className="section-title">نقشه فورتنایت</h2>
+              <p className="section-sub">مناطق نقشه · رتبه‌بندی لوت · جستجوی منطقه</p>
             </div>
             <MapSection />
           </div>
@@ -422,10 +454,10 @@ export default function FortniteApp() {
 
         {/* ── COSMETICS ── */}
         {activeTab === "cosmetics" && (
-          <div className="space-y-5">
+          <div className="tab-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
-              <h2 className="text-xl font-bold text-white">مجموعه اسکین‌ها</h2>
-              <p className="text-sm text-gray-400 mt-1">همه آیتم‌های فورتنایت · علامت‌گذاری موارد دارم</p>
+              <h2 className="section-title">مجموعه اسکین‌ها</h2>
+              <p className="section-sub">همه آیتم‌های فورتنایت · علامت‌گذاری موارد دارم</p>
             </div>
             <CosmeticsSection />
           </div>
@@ -433,10 +465,10 @@ export default function FortniteApp() {
 
         {/* ── STATS ── */}
         {activeTab === "stats" && (
-          <div className="space-y-5">
+          <div className="tab-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
-              <h2 className="text-xl font-bold text-white">آمار و لینک‌های مفید</h2>
-              <p className="text-sm text-gray-400 mt-1">جستجوی بازیکن · سایت‌های فورتنایت</p>
+              <h2 className="section-title">آمار و لینک‌های مفید</h2>
+              <p className="section-sub">جستجوی بازیکن · سایت‌های فورتنایت</p>
             </div>
             <StatsSection />
           </div>
@@ -444,28 +476,44 @@ export default function FortniteApp() {
 
         {/* ── TOOLS ── */}
         {activeTab === "tools" && (
-          <div className="space-y-5">
+          <div className="tab-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
-              <h2 className="text-xl font-bold text-white">ابزارها</h2>
-              <p className="text-sm text-gray-400 mt-1">ماشین‌حساب V-Bucks · پکیج‌ها · کدهای تمرین Creative</p>
+              <h2 className="section-title">ابزارها</h2>
+              <p className="section-sub">ماشین‌حساب V-Bucks · پکیج‌ها · کدهای تمرین Creative</p>
             </div>
             <ToolsSection />
           </div>
         )}
       </main>
+
+      {/* ══ MOBILE BOTTOM NAV ════════════════════════════════════════ */}
+      <nav className="bottom-nav md:hidden">
+        {TAB_DEFS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`bottom-nav-btn${activeTab === tab.key ? " active" : ""}`}
+          >
+            <span className="bn-icon">{tab.icon}</span>
+            <span className="bn-label">{tab.label}</span>
+            {tab.key === "objectives" && newQuestCount > 0 && (
+              <span style={{
+                position: "absolute", top: 4, right: "50%", transform: "translateX(8px)",
+                background: "#ef4444", color: "#fff",
+                fontSize: 8, fontWeight: 800,
+                padding: "1px 4px", borderRadius: 999,
+                lineHeight: "1.4",
+              }}>
+                {newQuestCount}
+              </span>
+            )}
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }
 
-function getTierColor(tier: string): string {
-  const c: Record<string, string> = { S: "#ffd700", A: "#22c55e", B: "#3b82f6", C: "#f59e0b", D: "#6b7280" };
-  return c[tier] ?? "#6b7280";
-}
-function getTierBg(tier: string): string {
-  const c: Record<string, string> = { S: "#ffd70015", A: "#22c55e15", B: "#3b82f615", C: "#f59e0b15", D: "#6b728015" };
-  return c[tier] ?? "#6b728015";
-}
-function getTierLabel(tier: string): string {
-  const c: Record<string, string> = { S: "بی‌نظیر", A: "عالی", B: "خوب", C: "متوسط", D: "ضعیف" };
-  return c[tier] ?? "";
-}
+const TIER_COLOR: Record<string, string> = { S: "#f0b429", A: "#22c55e", B: "#3b82f6", C: "#f97316", D: "#6b7280" };
+const TIER_BG:    Record<string, string> = { S: "#f0b42912", A: "#22c55e12", B: "#3b82f612", C: "#f9731612", D: "#6b728012" };
+const TIER_LABEL: Record<string, string> = { S: "بی‌نظیر", A: "عالی", B: "خوب", C: "متوسط", D: "ضعیف" };

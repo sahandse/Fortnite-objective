@@ -11,87 +11,137 @@ interface Props {
   onToggleComplete: (id: string) => void;
 }
 
-export default function QuestCard({ quest, isFavorite, isCompleted, onToggleFavorite, onToggleComplete }: Props) {
+const CAT_CLASS: Record<string, string> = {
+  daily: "cat-daily", weekly: "cat-weekly", story: "cat-story",
+  battlepass: "cat-battlepass", ranked: "cat-ranked",
+  event: "cat-event", milestone: "cat-milestone",
+};
+
+export default function QuestCard({
+  quest, isFavorite, isCompleted, onToggleFavorite, onToggleComplete,
+}: Props) {
   const cat = QUEST_CATEGORIES[quest.category];
 
   return (
     <div
-      className="relative rounded-xl p-4 card-hover group transition-opacity"
+      className="card card-lift group"
       style={{
-        background: isCompleted ? "#0a1a0a" : "#111827",
-        border: `1px solid ${isCompleted ? "#22c55e40" : "#1f2937"}`,
-        borderRight: `3px solid ${isCompleted ? "#22c55e" : cat.color}`,
-        opacity: isCompleted ? 0.7 : 1,
-      }}>
-      {/* New badge */}
-      {quest.isNew && !isCompleted && (
-        <span className="absolute top-3 left-12 text-xs font-bold px-2 py-0.5 rounded-full"
-          style={{ background: "#ef4444", color: "#fff" }}>
-          جدید
-        </span>
-      )}
-
-      {/* Top-right actions */}
-      <div className="absolute top-3 left-3 flex items-center gap-1">
-        {/* Complete checkbox */}
+        position: "relative",
+        padding: "16px",
+        borderRight: `3px solid ${isCompleted ? "#10b981" : cat.color}`,
+        borderColor: isCompleted ? "rgba(16,185,129,0.2)" : undefined,
+        background: isCompleted ? "rgba(16,185,129,0.03)" : undefined,
+        opacity: isCompleted ? 0.75 : 1,
+        transition: "opacity 0.2s ease",
+      }}
+    >
+      {/* Actions — top left */}
+      <div style={{ position: "absolute", top: 12, left: 12, display: "flex", gap: 5, zIndex: 1 }}>
         <button
           onClick={() => onToggleComplete(quest.id)}
-          className="w-6 h-6 rounded-md flex items-center justify-center text-xs transition-all"
+          title={isCompleted ? "علامت‌گذاری انجام‌نشده" : "علامت‌گذاری انجام‌شده"}
           style={{
-            background: isCompleted ? "#22c55e" : "#1f2937",
-            border: `1px solid ${isCompleted ? "#22c55e" : "#374151"}`,
-            color: isCompleted ? "#fff" : "#9ca3af",
-          }}
-          title={isCompleted ? "علامت‌گذاری به عنوان انجام نشده" : "علامت‌گذاری به عنوان انجام شده"}>
+            width: 26, height: 26, borderRadius: 7,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 12, fontWeight: 800,
+            border: `1px solid ${isCompleted ? "#10b981" : "rgba(255,255,255,0.1)"}`,
+            background: isCompleted ? "#10b981" : "rgba(255,255,255,0.04)",
+            color: isCompleted ? "#000" : "var(--c-dim)",
+            cursor: "pointer",
+            transition: "all 0.15s ease",
+          }}>
           {isCompleted ? "✓" : ""}
         </button>
-        {/* Favorite */}
         <button
           onClick={() => onToggleFavorite(quest.id)}
-          className={`star-btn text-base ${isFavorite ? "active" : "text-gray-600 opacity-0 group-hover:opacity-100"}`}
-          aria-label="علاقه‌مندی">
+          style={{
+            width: 26, height: 26, borderRadius: 7,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 15, border: "none", background: "none",
+            cursor: "pointer",
+            opacity: isFavorite ? 1 : 0,
+            color: isFavorite ? "#f0b429" : "var(--c-dim)",
+            transition: "all 0.2s ease",
+          }}
+          className="group-hover:opacity-100">
           {isFavorite ? "⭐" : "☆"}
         </button>
       </div>
 
+      {/* New badge */}
+      {quest.isNew && !isCompleted && (
+        <span style={{
+          position: "absolute", top: 12, left: 72,
+          fontSize: 10, fontWeight: 700,
+          padding: "2px 8px", borderRadius: 999,
+          background: "#ef4444", color: "#fff",
+          letterSpacing: "0.02em",
+        }}>
+          جدید
+        </span>
+      )}
+
       {/* Category badge */}
-      <div className="mb-3 pl-16">
-        <span className={`text-xs font-medium px-2 py-1 rounded-lg category-${quest.category}`}>
+      <div style={{ marginBottom: 10, paddingLeft: 66 }}>
+        <span className={`badge ${CAT_CLASS[quest.category] ?? ""}`}>
           {cat.icon} {cat.labelFa}
-          {quest.week && ` · هفته ${quest.week}`}
+          {quest.week ? ` · هفته ${quest.week}` : ""}
         </span>
       </div>
 
-      {/* Title with strikethrough if completed */}
-      <h3 className={`font-bold text-sm leading-relaxed mb-1 ${isCompleted ? "line-through text-gray-500" : "text-white"}`}>
+      {/* Title */}
+      <h3 style={{
+        fontWeight: 700,
+        fontSize: 14,
+        lineHeight: 1.55,
+        marginBottom: 6,
+        color: isCompleted ? "var(--c-muted)" : "var(--c-text)",
+        textDecoration: isCompleted ? "line-through" : "none",
+      }}>
         {quest.titleFa}
       </h3>
 
       {/* Description */}
-      <p className="text-gray-400 text-xs leading-relaxed mb-3 line-clamp-2">
+      <p style={{
+        fontSize: 12,
+        color: "var(--c-muted)",
+        lineHeight: 1.65,
+        marginBottom: 10,
+        display: "-webkit-box",
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: "vertical",
+        overflow: "hidden",
+      }}>
         {quest.descriptionFa}
       </p>
 
       {/* Target */}
-      <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
+      <div style={{
+        display: "flex", alignItems: "center", gap: 5,
+        fontSize: 12, color: "var(--c-dim)", marginBottom: 10,
+      }}>
         <span>🎯</span>
         <span>{quest.target.toLocaleString("fa-IR")} {quest.targetUnit}</span>
       </div>
 
-      {/* Progress bar */}
-      <div className="progress-bar mb-3">
+      {/* Progress */}
+      <div className="progress-bar" style={{ marginBottom: 12 }}>
         <div className="progress-fill" style={{ width: isCompleted ? "100%" : "0%" }} />
       </div>
 
-      {/* XP Reward */}
-      <div className="flex items-center justify-between">
-        <span className={`xp-badge ${isCompleted ? "opacity-50" : ""}`}>
+      {/* Footer */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <span className="badge-xp" style={{ opacity: isCompleted ? 0.65 : 1 }}>
           {isCompleted ? "✅" : "✨"} {quest.xpReward.toLocaleString("fa-IR")} XP
         </span>
-        <div className="flex gap-1">
+        <div style={{ display: "flex", gap: 4 }}>
           {quest.tags.slice(0, 2).map((tag) => (
-            <span key={tag} className="text-xs text-gray-600 px-1.5 py-0.5 rounded"
-              style={{ background: "#1f2937" }}>
+            <span key={tag} style={{
+              fontSize: 11, color: "var(--c-dim)",
+              padding: "2px 7px", borderRadius: 6,
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}>
               {tag}
             </span>
           ))}

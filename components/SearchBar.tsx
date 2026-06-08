@@ -7,8 +7,11 @@ interface Props {
 
 export default function SearchBar({ value, onChange }: Props) {
   return (
-    <div className="relative">
-      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none">
+    <div style={{ position: "relative" }}>
+      <span style={{
+        position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
+        fontSize: 16, opacity: 0.35, pointerEvents: "none", lineHeight: 1,
+      }}>
         🔍
       </span>
       <input
@@ -16,25 +19,23 @@ export default function SearchBar({ value, onChange }: Props) {
         placeholder="جستجو در اهداف..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full pr-12 pl-10 py-3 rounded-xl text-white placeholder-gray-500 text-sm outline-none transition-all"
-        style={{
-          background: "#111827",
-          border: "1px solid #1f2937",
-          fontFamily: "'Vazirmatn', sans-serif",
-        }}
-        onFocus={(e) => {
-          e.currentTarget.style.borderColor = "#00d4ff60";
-          e.currentTarget.style.boxShadow = "0 0 0 2px #00d4ff20";
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.borderColor = "#1f2937";
-          e.currentTarget.style.boxShadow = "none";
-        }}
+        className="input"
+        style={{ paddingRight: 44, paddingLeft: value ? 40 : 16 }}
       />
       {value && (
         <button
           onClick={() => onChange("")}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors text-lg">
+          style={{
+            position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
+            background: "none", border: "none",
+            color: "var(--c-dim)", cursor: "pointer",
+            fontSize: 14, display: "flex", alignItems: "center",
+            padding: 4, borderRadius: 6,
+            transition: "color 0.15s",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--c-text)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--c-dim)")}
+        >
           ✕
         </button>
       )}
