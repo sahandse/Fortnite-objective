@@ -1,0 +1,28 @@
+{
+  "name": "فورتنایت فارسی",
+  "short_name": "فورتنایت",
+  "description": "اهداف، آیتم‌شاپ و اطلاعات کامل فورتنایت به فارسی",
+  "start_url": "/Fortnite-objective/",
+  "scope": "/Fortnite-objective/",
+  "display": "standalone",
+  "background_color": "#050710",
+  "theme_color": "#00c9f5",
+  "dir": "rtl",
+  "lang": "fa",
+  "orientation": "any",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "/Fortnite-objective/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/Fortnite-objective/icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

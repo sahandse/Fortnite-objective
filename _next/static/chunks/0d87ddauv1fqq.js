@@ -1,0 +1,1 @@
+(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,30679,e=>{"use strict";var t=e.i(71645);e.s(["default",0,function(){return(0,t.useEffect)(()=>{"serviceWorker"in navigator&&navigator.serviceWorker.register("/Fortnite-objective/sw.js",{scope:"/Fortnite-objective/"}).catch(()=>{})},[]),null}])}]);
