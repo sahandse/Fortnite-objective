@@ -12,7 +12,14 @@ export default function NewsSection({ news, loading }: Props) {
     return (
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16 }}>
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="shimmer" style={{ borderRadius: 16, height: 260 }} />
+          <div key={i} className="card" style={{ overflow: "hidden" }}>
+            <div className="shimmer" style={{ aspectRatio: "16/9", width: "100%" }} />
+            <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="shimmer" style={{ height: 15, borderRadius: 6, width: "75%" }} />
+              <div className="shimmer" style={{ height: 11, borderRadius: 6, width: "90%" }} />
+              <div className="shimmer" style={{ height: 11, borderRadius: 6, width: "55%" }} />
+            </div>
+          </div>
         ))}
       </div>
     );

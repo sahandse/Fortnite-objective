@@ -41,7 +41,7 @@ export default function FortniteApp() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
-  const [shopSource, setShopSource] = useState<"live" | "offline" | null>(null);
+  const [shopSource, setShopSource] = useState<"live" | "offline" | "cache" | null>(null);
   const [shopLoading, setShopLoading] = useState(false);
   const [shopError, setShopError] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -84,7 +84,7 @@ export default function FortniteApp() {
     try {
       const result = await fetchItemShop();
       setShopItems(result.items);
-      setShopSource(result.source as "live" | "offline");
+      setShopSource(result.source as "live" | "offline" | "cache");
       setLastUpdated(new Date());
     } catch {
       setShopError(true);
@@ -306,8 +306,8 @@ export default function FortniteApp() {
                     </span>
                   )}
                   {shopSource && (
-                    <span className={`badge ${shopSource === "live" ? "pill-live" : "pill-offline"}`}>
-                      {shopSource === "live" ? "🟢 لایو" : "📦 آفلاین"}
+                    <span className={`badge ${shopSource === "live" ? "pill-live" : shopSource === "cache" ? "pill-live" : "pill-offline"}`}>
+                      {shopSource === "live" ? "🟢 لایو" : shopSource === "cache" ? "⚡ کش" : "📦 آفلاین"}
                     </span>
                   )}
                 </div>
@@ -340,7 +340,21 @@ export default function FortniteApp() {
             {shopLoading ? (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(130px,1fr))", gap: 12 }}>
                 {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={i} className="shimmer" style={{ aspectRatio: "3/4", borderRadius: 14 }} />
+                  <div key={i} style={{
+                    position: "relative", aspectRatio: "3/4", borderRadius: 14,
+                    background: "#090e1f", overflow: "hidden",
+                  }}>
+                    <div className="shimmer" style={{ position: "absolute", inset: 0 }} />
+                    <div style={{
+                      position: "absolute", bottom: 0, left: 0, right: 0,
+                      padding: "8px 10px 10px",
+                      background: "linear-gradient(to bottom, transparent, rgba(5,8,16,0.95))",
+                      display: "flex", flexDirection: "column", gap: 5,
+                    }}>
+                      <div style={{ height: 11, borderRadius: 4, background: "rgba(255,255,255,0.07)", width: "80%" }} />
+                      <div style={{ height: 8, borderRadius: 4, background: "rgba(255,255,255,0.05)", width: "45%" }} />
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : shopError ? (

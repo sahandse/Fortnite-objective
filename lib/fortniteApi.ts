@@ -86,6 +86,25 @@ async function tryCORS(url: string): Promise<unknown | null> {
   return null;
 }
 
+// ── localStorage TTL cache ───────────────────────────────────────────────────
+const HOUR_MS = 60 * 60 * 1000;
+
+function lsGet<T>(key: string): T | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(`fn:${key}`);
+    if (!raw) return null;
+    const { v, t, ttl } = JSON.parse(raw) as { v: T; t: number; ttl: number };
+    if (Date.now() - t > ttl) { localStorage.removeItem(`fn:${key}`); return null; }
+    return v;
+  } catch { return null; }
+}
+
+function lsSet<T>(key: string, v: T, ttl: number): void {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(`fn:${key}`, JSON.stringify({ v, t: Date.now(), ttl })); } catch {}
+}
+
 function parseShop(data: FortniteAPIShopResponse): ShopItem[] {
   const items: ShopItem[] = [];
   const seen = new Set<string>();
@@ -122,11 +141,17 @@ function parseShop(data: FortniteAPIShopResponse): ShopItem[] {
 }
 
 export async function fetchItemShop(): Promise<{ items: ShopItem[]; source: string }> {
+  const cached = lsGet<ShopItem[]>("shop");
+  if (cached?.length) return { items: cached, source: "cache" };
+
   const data = await tryCORS("https://fortnite-api.com/v2/shop?language=en");
   if (data) {
     try {
       const parsed = parseShop(data as FortniteAPIShopResponse);
-      if (parsed.length > 0) return { items: parsed, source: "live" };
+      if (parsed.length > 0) {
+        lsSet("shop", parsed, HOUR_MS);
+        return { items: parsed, source: "live" };
+      }
     } catch { /* fall through */ }
   }
   return { items: getFallbackShopItems(), source: "offline" };
@@ -141,6 +166,9 @@ export interface FortniteNews {
 }
 
 export async function fetchFortniteNews(): Promise<FortniteNews[]> {
+  const cached = lsGet<FortniteNews[]>("news");
+  if (cached?.length) return cached;
+
   const data = await tryCORS("https://fortnite-api.com/v2/news/br?language=en");
   if (!data) return getFallbackNews();
   try {
@@ -148,12 +176,14 @@ export async function fetchFortniteNews(): Promise<FortniteNews[]> {
     const motds = (data as any)?.data?.motds ?? (data as any)?.data?.news?.motds ?? [];
     if (!motds.length) return getFallbackNews();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return motds.slice(0, 8).map((m: any) => ({
+    const result = motds.slice(0, 8).map((m: any) => ({
       id:    m.id    ?? String(Math.random()),
       title: translateNewsFa(m.title ?? ""),
       body:  translateNewsFa(m.body ?? m.tabTitle ?? ""),
       image: m.image ?? m.largeImage ?? "",
     }));
+    lsSet("news", result, HOUR_MS);
+    return result;
   } catch { return getFallbackNews(); }
 }
 

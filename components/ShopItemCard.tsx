@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShopItem } from "@/types";
 import {
   getRarityColor,
@@ -16,6 +16,11 @@ interface Props {
   onToggleFavorite: (id: string) => void;
 }
 
+function formatIrt(toman: number): string {
+  if (toman >= 1_000_000) return `${(toman / 1_000_000).toFixed(1)} م ت`;
+  return `${Math.round(toman / 1000).toLocaleString("en-US")} هزار ت`;
+}
+
 const TYPE_EMOJI: Record<string, string> = {
   outfit: "👤", emote: "💃", pickaxe: "⛏️", glider: "🪂",
   wrap: "🎨", backpack: "🎒", contrail: "✨", spray: "🖌️",
@@ -25,7 +30,15 @@ const TYPE_EMOJI: Record<string, string> = {
 export default function ShopItemCard({ item, isFavorite, onToggleFavorite }: Props) {
   const [imgState, setImgState] = useState<"loading" | "ok" | "error">("loading");
   const [hovered, setHovered] = useState(false);
+  const [usdRate, setUsdRate] = useState(90000);
   const rColor = getRarityColor(item.rarity);
+
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem("fn:usd_to_irt");
+      if (s) setUsdRate(parseInt(s, 10) || 90000);
+    } catch {}
+  }, []);
   const imageSrc = item.images.featured ?? item.images.icon ?? item.images.smallIcon;
   const emoji = TYPE_EMOJI[item.type] ?? "🎮";
 
@@ -183,6 +196,9 @@ export default function ShopItemCard({ item, isFavorite, onToggleFavorite }: Pro
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span className="text-vbucks" style={{ fontSize: 13, fontWeight: 900, lineHeight: 1 }}>V</span>
           <span style={{ fontWeight: 800, color: "#fff", fontSize: 14 }}>{formatVBucks(item.price)}</span>
+        </div>
+        <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2, lineHeight: 1 }}>
+          ≈ {formatIrt(Math.round((item.price / 1000) * 8 * usdRate))}
         </div>
       </div>
     </div>
