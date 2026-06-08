@@ -3,6 +3,15 @@
 import { useState, useEffect } from "react";
 import { fetchPlaylists, Playlist } from "@/lib/fortniteApi";
 
+// ── Battle Pass constants ─────────────────────────────────────────────────────
+const BP_COST_VB = 950;
+const BP_TOTAL_LEVELS = 100;
+const BP_SKIP_COST = 150;       // V-Bucks per level
+const BP_REWARD_VB = 1500;      // V-Bucks earned by completing BP
+const XP_PER_LEVEL = 80000;
+const XP_PER_DAILY = 14000;
+const XP_PASSIVE_DAY = 20000;   // weekly quests + matches average
+
 // ── V-Bucks packages ──────────────────────────────────────────────────────────
 const VBUCKS_PACKAGES = [
   { vb: 1000,  usd: 7.99,  label: "۱٬۰۰۰" },
@@ -11,6 +20,137 @@ const VBUCKS_PACKAGES = [
   { vb: 13500, usd: 79.99, label: "۱۳٬۵۰۰" },
 ];
 const USD_TO_IRT = 85000; // approximate
+
+// ── Battle Pass Calculator component ─────────────────────────────────────────
+interface BPProps {
+  current: number; setCurrent: (v: number) => void;
+  target: number;  setTarget:  (v: number) => void;
+  dailies: number; setDailies: (v: number) => void;
+}
+
+function BattlePassCalc({ current, setCurrent, target, setTarget, dailies, setDailies }: BPProps) {
+  const levelsLeft = Math.max(0, target - current);
+  const xpNeeded = levelsLeft * XP_PER_LEVEL;
+  const xpPerDay = dailies * XP_PER_DAILY + XP_PASSIVE_DAY;
+  const daysNeeded = xpPerDay > 0 ? Math.ceil(xpNeeded / xpPerDay) : 0;
+  const skipCost = levelsLeft * BP_SKIP_COST;
+  const pctDone = Math.round((current / BP_TOTAL_LEVELS) * 100);
+  const isProfitable = current >= 40; // BP pays for itself around level 40
+
+  return (
+    <section>
+      <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--c-text)", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+        <span>🏆</span> محاسبه‌گر Battle Pass
+      </h3>
+
+      {/* Progress bar visual */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 12, color: "#9ca3af" }}>
+          <span>سطح {current}</span>
+          <span style={{ color: "#f0b429", fontWeight: 700 }}>{pctDone}٪ کامل</span>
+          <span>هدف {target}</span>
+        </div>
+        <div style={{ height: 8, borderRadius: 4, background: "#1f2937", overflow: "hidden" }}>
+          <div style={{
+            height: "100%", borderRadius: 4,
+            width: `${pctDone}%`,
+            background: "linear-gradient(90deg, #f0b429, #ff8c00)",
+            transition: "width 0.3s",
+          }} />
+        </div>
+      </div>
+
+      {/* Inputs row */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+        <div>
+          <label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 4 }}>سطح فعلی</label>
+          <input
+            type="number" min={0} max={target - 1}
+            value={current}
+            onChange={(e) => setCurrent(Math.min(Math.max(0, +e.target.value), target - 1))}
+            style={{ width: "100%", padding: "9px 12px", borderRadius: 10, background: "#111827", border: "1px solid #1f2937", color: "#e5e7eb", fontSize: 14, outline: "none", boxSizing: "border-box" }}
+          />
+        </div>
+        <div>
+          <label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 4 }}>سطح هدف</label>
+          <input
+            type="number" min={current + 1} max={100}
+            value={target}
+            onChange={(e) => setTarget(Math.min(100, Math.max(current + 1, +e.target.value)))}
+            style={{ width: "100%", padding: "9px 12px", borderRadius: 10, background: "#111827", border: "1px solid #1f2937", color: "#e5e7eb", fontSize: 14, outline: "none", boxSizing: "border-box" }}
+          />
+        </div>
+      </div>
+
+      {/* Daily quests selector */}
+      <div style={{ marginBottom: 14 }}>
+        <label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 8 }}>
+          کوئست روزانه انجام می‌دی؟
+        </label>
+        <div style={{ display: "flex", gap: 8 }}>
+          {[1, 2, 3].map((n) => (
+            <button key={n} onClick={() => setDailies(n)} style={{
+              flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 700,
+              border: "none", cursor: "pointer", transition: "all 0.15s",
+              background: dailies === n ? "linear-gradient(135deg, #f0b429, #ff8c00)" : "#111827",
+              color: dailies === n ? "#000" : "#6b7280",
+            }}>
+              {n === 1 ? "۱ کوئست" : n === 2 ? "۲ کوئست" : "۳ کوئست"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Result cards */}
+      {levelsLeft > 0 ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+          <div className="card" style={{ padding: "14px", gridColumn: "1 / -1", background: "linear-gradient(135deg, #1a1a2e, #16213e)" }}>
+            <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 4 }}>سطح‌های باقی‌مانده</div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: "#f0b429" }}>{levelsLeft}</div>
+            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+              {(xpNeeded / 1_000_000).toFixed(1)}M XP مورد نیاز
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: "12px" }}>
+            <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4 }}>📅 زمان تخمینی</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#00c9f5" }}>{daysNeeded}</div>
+            <div style={{ fontSize: 10, color: "#6b7280" }}>روز</div>
+          </div>
+
+          <div className="card" style={{ padding: "12px" }}>
+            <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4 }}>💎 هزینه Skip</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "#c05dff" }}>{skipCost.toLocaleString()}</div>
+            <div style={{ fontSize: 10, color: "#6b7280" }}>V-Bucks</div>
+          </div>
+
+          <div className="card" style={{ padding: "12px", gridColumn: "1 / -1", borderColor: isProfitable ? "#10b98133" : "#374151" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 20 }}>{isProfitable ? "✅" : "⏳"}</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: isProfitable ? "#10b981" : "#9ca3af" }}>
+                  {isProfitable
+                    ? `BP ارزشش رو داد! ${BP_REWARD_VB.toLocaleString()} VB برگشتی`
+                    : `با رسیدن به سطح ~۴۰، ${BP_REWARD_VB.toLocaleString()} VB برمی‌گرده`
+                  }
+                </div>
+                <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+                  BP: 950 VB هزینه · {BP_REWARD_VB} VB درآمد
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="card" style={{ padding: "20px", textAlign: "center" }}>
+          <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
+          <div style={{ fontWeight: 700, color: "#10b981" }}>Battle Pass کامل شد!</div>
+          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>{BP_REWARD_VB.toLocaleString()} VB جایزه گرفتی</div>
+        </div>
+      )}
+    </section>
+  );
+}
 
 // ── Creative practice codes ───────────────────────────────────────────────────
 const CREATIVE_CODES = [
@@ -64,6 +204,12 @@ function faPart(s?: string): string {
 }
 
 export default function GuidesSection() {
+  // Battle Pass calc
+  const [bpCurrent, setBpCurrent] = useState(0);
+  const [bpTarget, setBpTarget] = useState(100);
+  const [bpDailies, setBpDailies] = useState(2);
+
+  // V-Bucks calc
   const [vbInput, setVbInput] = useState("1000");
   const [priceInput, setPriceInput] = useState("");
   const [activeDir, setActiveDir] = useState<"vb" | "price">("vb");
@@ -107,6 +253,13 @@ export default function GuidesSection() {
 
   return (
     <div dir="rtl" style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+
+      {/* ── Battle Pass Calculator ── */}
+      <BattlePassCalc
+        current={bpCurrent} setCurrent={setBpCurrent}
+        target={bpTarget}   setTarget={setBpTarget}
+        dailies={bpDailies} setDailies={setBpDailies}
+      />
 
       {/* ── V-Bucks Calculator ── */}
       <section>
