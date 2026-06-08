@@ -1,3 +1,3 @@
-:HL["/Fortnite-objective/_next/static/chunks/34ejf7hbh0624.css","style"]
+:HL["/Fortnite-objective/_next/static/chunks/0bz7q7w92t86w.css","style"]
 :HL["https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"8EzYvmMN1qHJ-QMiYTdkZ"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"QSkVsefFWv5iyxXbhhaQN"}
