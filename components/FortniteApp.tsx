@@ -20,6 +20,7 @@ import MapSection from "./MapSection";
 import CosmeticsSection from "./CosmeticsSection";
 import JamTracksSection from "./JamTracksSection";
 import GuidesSection from "./GuidesSection";
+import ServerStatus from "./ServerStatus";
 
 type Tab = "objectives" | "shop" | "weapons" | "news" | "map" | "cosmetics" | "jamtracks" | "guides";
 
@@ -216,6 +217,9 @@ export default function FortniteApp() {
 
           {/* Actions */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <div className="hidden sm:block">
+              <ServerStatus />
+            </div>
             <div className="hidden sm:block">
               <ShopTimer />
             </div>

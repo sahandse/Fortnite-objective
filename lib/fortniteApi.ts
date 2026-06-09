@@ -157,6 +157,35 @@ export async function fetchItemShop(): Promise<{ items: ShopItem[]; source: stri
   return { items: getFallbackShopItems(), source: "offline" };
 }
 
+// ── Server Status ────────────────────────────────────────────────────────────
+export type ServerStatusLevel = "operational" | "degraded" | "outage" | "unknown";
+
+export interface ServerStatusResult {
+  level: ServerStatusLevel;
+  label: string;
+}
+
+export async function fetchServerStatus(): Promise<ServerStatusResult> {
+  try {
+    const data = await tryCORS("https://status.epicgames.com/api/v2/summary.json");
+    if (!data) return { level: "unknown", label: "نامشخص" };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const components: any[] = (data as any)?.components ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fn = components.find((c: any) =>
+      c.name?.toLowerCase().includes("fortnite") ||
+      c.name?.toLowerCase().includes("battle royale")
+    );
+    const raw: string = fn?.status ?? (data as any)?.status?.indicator ?? "";
+    if (raw === "operational" || raw === "none") return { level: "operational", label: "سرور آنلاین" };
+    if (raw === "degraded_performance" || raw === "minor") return { level: "degraded", label: "کند" };
+    if (raw.includes("outage") || raw === "major") return { level: "outage", label: "اختلال سرور" };
+    return { level: "operational", label: "سرور آنلاین" };
+  } catch {
+    return { level: "unknown", label: "نامشخص" };
+  }
+}
+
 // ── News ────────────────────────────────────────────────────────────────────
 export interface FortniteNews {
   id: string;
