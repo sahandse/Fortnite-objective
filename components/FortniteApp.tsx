@@ -22,13 +22,15 @@ import JamTracksSection from "./JamTracksSection";
 import GuidesSection from "./GuidesSection";
 import ServerStatus from "./ServerStatus";
 import UpcomingSection from "./UpcomingSection";
+import StatsSection from "./StatsSection";
 
-type Tab = "objectives" | "shop" | "weapons" | "news" | "map" | "cosmetics" | "jamtracks" | "guides" | "upcoming";
+type Tab = "objectives" | "shop" | "weapons" | "news" | "map" | "cosmetics" | "jamtracks" | "guides" | "upcoming" | "stats";
 
 const TAB_DEFS: { key: Tab; label: string; icon: string }[] = [
   { key: "objectives", label: "اهداف",    icon: "🎯" },
   { key: "shop",       label: "شاپ",      icon: "🛒" },
   { key: "upcoming",   label: "لیک‌ها",   icon: "🔮" },
+  { key: "stats",      label: "آمار",     icon: "📊" },
   { key: "weapons",    label: "سلاح‌ها",  icon: "⚔️" },
   { key: "news",       label: "اخبار",    icon: "📢" },
   { key: "map",        label: "نقشه",     icon: "🗺️" },
@@ -491,6 +493,17 @@ export default function FortniteApp() {
               <p className="section-sub">آهنگ‌های موجود در Fortnite Festival · سختی ابزار</p>
             </div>
             <JamTracksSection />
+          </div>
+        )}
+
+        {/* ── STATS ── */}
+        {activeTab === "stats" && (
+          <div className="tab-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div>
+              <h2 className="section-title">📊 آمار بازیکن</h2>
+              <p className="section-sub">جستجوی آمار با نام کاربری Epic Games</p>
+            </div>
+            <StatsSection />
           </div>
         )}
 
