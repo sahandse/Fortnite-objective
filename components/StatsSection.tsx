@@ -37,7 +37,7 @@ const STAT_CARDS = [
   { key: "killsPerMatch", label: "کیل/بازی",  icon: "🎯", color: "#c05dff", dec: 1 },
 ] as const;
 
-// ── component ──────────────────────────────────────────────────────────────────
+const DEFAULT_API_KEY = "c1fa9aec-8835-47dd-a87c-20f7b6f98661";
 export default function StatsSection() {
   const [username, setUsername]       = useState("");
   const [apiKey, setApiKey]           = useState("");
@@ -51,10 +51,13 @@ export default function StatsSection() {
   useEffect(() => {
     try {
       const u = localStorage.getItem("fn:stats_user");
-      const k = localStorage.getItem("fn:stats_key");
+      const k = localStorage.getItem("fn:stats_key") || DEFAULT_API_KEY;
       const r = localStorage.getItem("fn:stats_recent");
       if (u) setUsername(u);
-      if (k) setApiKey(k);
+      setApiKey(k);
+      if (!localStorage.getItem("fn:stats_key")) {
+        localStorage.setItem("fn:stats_key", DEFAULT_API_KEY);
+      }
       if (r) setRecent(JSON.parse(r));
     } catch {}
   }, []);
@@ -73,27 +76,39 @@ export default function StatsSection() {
       localStorage.setItem("fn:stats_user", name);
       if (apiKey) localStorage.setItem("fn:stats_key", apiKey.trim());
 
-      const url = `https://fortnite-api.com/v2/stats/br/v2?name=${encodeURIComponent(name)}&accountType=epic`;
-      const headers: HeadersInit = apiKey.trim() ? { Authorization: apiKey.trim() } : {};
+      const key = apiKey.trim();
+      const baseUrl = `https://fortnite-api.com/v2/stats/br/v2?name=${encodeURIComponent(name)}&accountType=epic`;
+      // Include key in URL for proxy compatibility (header auth doesn't survive some proxies)
+      const authedUrl = key ? `${baseUrl}&apiKey=${encodeURIComponent(key)}` : baseUrl;
+      const headers: HeadersInit = key ? { Authorization: key } : {};
 
       let data: unknown = null;
-      // Try direct fetch
+      // Attempt 1: direct fetch with Authorization header
       try {
-        const r = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
+        const r = await fetch(authedUrl, { headers, signal: AbortSignal.timeout(9000) });
         if (r.status === 401 || r.status === 403) { setError("key"); return; }
         if (r.status === 404) { setError("notfound"); return; }
         if (!r.ok) throw new Error(`${r.status}`);
         data = await r.json();
       } catch (e: unknown) {
-        if ((e as { message?: string })?.message === "key" || (e as { message?: string })?.message === "notfound") throw e;
-        // Try CORS proxy
+        const msg = String(e);
+        if (msg.includes("key") || msg.includes("notfound")) { setError("key"); return; }
+        // Attempt 2: CORS proxy (key baked into URL)
         try {
-          const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(9000) });
+          const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(authedUrl)}`, { signal: AbortSignal.timeout(10000) });
           if (r.status === 401 || r.status === 403) { setError("key"); return; }
           if (r.status === 404) { setError("notfound"); return; }
+          if (!r.ok) throw new Error(`${r.status}`);
           data = await r.json();
         } catch {
-          setError("network"); return;
+          // Attempt 3: allorigins proxy
+          try {
+            const wrapped = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(authedUrl)}`, { signal: AbortSignal.timeout(10000) });
+            const w = await wrapped.json();
+            data = JSON.parse(w.contents);
+          } catch {
+            setError("network"); return;
+          }
         }
       }
 
