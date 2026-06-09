@@ -21,12 +21,14 @@ import CosmeticsSection from "./CosmeticsSection";
 import JamTracksSection from "./JamTracksSection";
 import GuidesSection from "./GuidesSection";
 import ServerStatus from "./ServerStatus";
+import UpcomingSection from "./UpcomingSection";
 
-type Tab = "objectives" | "shop" | "weapons" | "news" | "map" | "cosmetics" | "jamtracks" | "guides";
+type Tab = "objectives" | "shop" | "weapons" | "news" | "map" | "cosmetics" | "jamtracks" | "guides" | "upcoming";
 
 const TAB_DEFS: { key: Tab; label: string; icon: string }[] = [
   { key: "objectives", label: "اهداف",    icon: "🎯" },
   { key: "shop",       label: "شاپ",      icon: "🛒" },
+  { key: "upcoming",   label: "لیک‌ها",   icon: "🔮" },
   { key: "weapons",    label: "سلاح‌ها",  icon: "⚔️" },
   { key: "news",       label: "اخبار",    icon: "📢" },
   { key: "map",        label: "نقشه",     icon: "🗺️" },
@@ -500,6 +502,17 @@ export default function FortniteApp() {
               <p className="section-sub">V-Bucks · مودها · کدهای تمرین · نکات حرفه‌ای</p>
             </div>
             <GuidesSection />
+          </div>
+        )}
+
+        {/* ── UPCOMING / LEAKS ── */}
+        {activeTab === "upcoming" && (
+          <div className="tab-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div>
+              <h2 className="section-title">🔮 لیک‌ها</h2>
+              <p className="section-sub">آیتم‌های تازه‌اضافه‌شده به فایل‌های بازی — ممکنه زود در شاپ بیان</p>
+            </div>
+            <UpcomingSection />
           </div>
         )}
       </main>
