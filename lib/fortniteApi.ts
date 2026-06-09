@@ -186,6 +186,46 @@ export async function fetchServerStatus(): Promise<ServerStatusResult> {
   }
 }
 
+// ── All-modes game news (BR + STW + Creative) ─────────────────────────────────
+export interface GameNewsItem {
+  id: string;
+  title: string;
+  body: string;
+  image: string;
+  mode: "br" | "stw" | "creative";
+}
+
+export async function fetchAllGameNews(): Promise<GameNewsItem[]> {
+  const cached = lsGet<GameNewsItem[]>("allnews");
+  if (cached?.length) return cached;
+
+  const data = await tryCORS("https://fortnite-api.com/v2/news?language=en");
+  if (!data) return [];
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const d = (data as any)?.data;
+    const result: GameNewsItem[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const parse = (raw: any, mode: GameNewsItem["mode"]) => {
+      for (const m of (raw?.motds ?? [])) {
+        if (m.hidden) continue;
+        result.push({
+          id:    m.id ?? `${mode}-${Math.random()}`,
+          title: translateNewsFa(m.title ?? ""),
+          body:  translateNewsFa(m.body ?? m.tabTitle ?? ""),
+          image: m.image ?? m.largeImage ?? "",
+          mode,
+        });
+      }
+    };
+    if (d?.br)       parse(d.br,       "br");
+    if (d?.stw)      parse(d.stw,      "stw");
+    if (d?.creative) parse(d.creative, "creative");
+    if (result.length) { lsSet("allnews", result, HOUR_MS); return result; }
+  } catch {}
+  return [];
+}
+
 // ── News ────────────────────────────────────────────────────────────────────
 export interface FortniteNews {
   id: string;
