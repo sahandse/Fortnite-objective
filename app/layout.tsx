@@ -5,6 +5,25 @@ import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 export const metadata: Metadata = {
   title: "فورتنایت فارسی | اهداف و آیتم‌شاپ",
   description: "اهداف، آیتم‌شاپ و اطلاعات کامل فورتنایت به فارسی",
+  keywords: ["فورتنایت", " Fortnite", "آیتم‌شاپ", "اهداف", "بتل رویال", "اسکین", "پچ‌نوت"],
+  authors: [{ name: "Fortnite Objective" }],
+  openGraph: {
+    title: "فورتنایت فارسی | اهداف و آیتم‌شاپ",
+    description: "اهداف، آیتم‌شاپ و اطلاعات کامل فورتنایت به فارسی",
+    type: "website",
+    locale: "fa_IR",
+    siteName: "فورتنایت فارسی",
+    images: ["/Fortnite-objective/icons/icon.svg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "فورتنایت فارسی | اهداف و آیتم‌شاپ",
+    description: "اهداف، آیتم‌شاپ و اطلاعات کامل فورتنایت به فارسی",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   icons: {
     icon: "/favicon.ico",
     apple: "/Fortnite-objective/icons/icon.svg",

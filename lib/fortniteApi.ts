@@ -165,21 +165,34 @@ export interface ServerStatusResult {
   label: string;
 }
 
+interface EpicComponent {
+  name?: string;
+  status?: string;
+}
+
+interface EpicStatusData {
+  components?: EpicComponent[];
+  status?: { indicator?: string };
+}
+
 export async function fetchServerStatus(): Promise<ServerStatusResult> {
   try {
     const data = await tryCORS("https://status.epicgames.com/api/v2/summary.json");
     if (!data) return { level: "unknown", label: "نامشخص" };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const components: any[] = (data as any)?.components ?? [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fn = components.find((c: any) =>
-      c.name?.toLowerCase().includes("fortnite") ||
-      c.name?.toLowerCase().includes("battle royale")
+    const components: EpicComponent[] = (data as EpicStatusData)?.components ?? [];
+    const fn = components.find(
+      (c) =>
+        c.name?.toLowerCase().includes("fortnite") ||
+        c.name?.toLowerCase().includes("battle royale"),
     );
-    const raw: string = fn?.status ?? (data as any)?.status?.indicator ?? "";
-    if (raw === "operational" || raw === "none") return { level: "operational", label: "سرور آنلاین" };
-    if (raw === "degraded_performance" || raw === "minor") return { level: "degraded", label: "کند" };
-    if (raw.includes("outage") || raw === "major") return { level: "outage", label: "اختلال سرور" };
+    const raw: string =
+      fn?.status ?? (data as EpicStatusData)?.status?.indicator ?? "";
+    if (raw === "operational" || raw === "none")
+      return { level: "operational", label: "سرور آنلاین" };
+    if (raw === "degraded_performance" || raw === "minor")
+      return { level: "degraded", label: "کند" };
+    if (raw.includes("outage") || raw === "major")
+      return { level: "outage", label: "اختلال سرور" };
     return { level: "operational", label: "سرور آنلاین" };
   } catch {
     return { level: "unknown", label: "نامشخص" };
@@ -195,6 +208,30 @@ export interface GameNewsItem {
   mode: "br" | "stw" | "creative";
 }
 
+interface NewsMotd {
+  id?: string;
+  title?: string;
+  body?: string;
+  tabTitle?: string;
+  image?: string;
+  largeImage?: string;
+  hidden?: boolean;
+}
+
+interface NewsDataBR {
+  motds?: NewsMotd[];
+}
+
+interface NewsDataAll {
+  br?: NewsDataBR;
+  stw?: NewsDataBR;
+  creative?: NewsDataBR;
+}
+
+interface NewsResponse {
+  data?: NewsDataAll;
+}
+
 export async function fetchAllGameNews(): Promise<GameNewsItem[]> {
   const cached = lsGet<GameNewsItem[]>("allnews");
   if (cached?.length) return cached;
@@ -202,24 +239,22 @@ export async function fetchAllGameNews(): Promise<GameNewsItem[]> {
   const data = await tryCORS("https://fortnite-api.com/v2/news?language=en");
   if (!data) return [];
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const d = (data as any)?.data;
+    const d = (data as NewsResponse)?.data;
     const result: GameNewsItem[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const parse = (raw: any, mode: GameNewsItem["mode"]) => {
+    const parse = (raw: NewsDataBR | undefined, mode: GameNewsItem["mode"]) => {
       for (const m of (raw?.motds ?? [])) {
         if (m.hidden) continue;
         result.push({
-          id:    m.id ?? `${mode}-${Math.random()}`,
+          id: m.id ?? `${mode}-${Math.random()}`,
           title: translateNewsFa(m.title ?? ""),
-          body:  translateNewsFa(m.body ?? m.tabTitle ?? ""),
+          body: translateNewsFa(m.body ?? m.tabTitle ?? ""),
           image: m.image ?? m.largeImage ?? "",
           mode,
         });
       }
     };
-    if (d?.br)       parse(d.br,       "br");
-    if (d?.stw)      parse(d.stw,      "stw");
+    if (d?.br) parse(d.br, "br");
+    if (d?.stw) parse(d.stw, "stw");
     if (d?.creative) parse(d.creative, "creative");
     if (result.length) { lsSet("allnews", result, HOUR_MS); return result; }
   } catch {}
@@ -241,14 +276,14 @@ export async function fetchFortniteNews(): Promise<FortniteNews[]> {
   const data = await tryCORS("https://fortnite-api.com/v2/news/br?language=en");
   if (!data) return getFallbackNews();
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const motds = (data as any)?.data?.motds ?? (data as any)?.data?.news?.motds ?? [];
+    const resp = data as NewsResponse;
+    const motds: NewsMotd[] =
+      resp?.data?.br?.motds ?? resp?.data?.news?.motds ?? [];
     if (!motds.length) return getFallbackNews();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = motds.slice(0, 8).map((m: any) => ({
-      id:    m.id    ?? String(Math.random()),
+    const result = motds.slice(0, 8).map((m) => ({
+      id: m.id ?? String(Math.random()),
       title: translateNewsFa(m.title ?? ""),
-      body:  translateNewsFa(m.body ?? m.tabTitle ?? ""),
+      body: translateNewsFa(m.body ?? m.tabTitle ?? ""),
       image: m.image ?? m.largeImage ?? "",
     }));
     lsSet("news", result, HOUR_MS);
@@ -626,8 +661,10 @@ export async function fetchPlaylists(): Promise<Playlist[]> {
   const data = await tryCORS("https://fortnite-api.com/v2/playlists?language=en");
   if (!data) return getFallbackPlaylists();
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw = (data as any).data;
+    interface PlaylistsResponse {
+  data?: Playlist[];
+}
+    const raw = (data as PlaylistsResponse)?.data;
     const arr: Playlist[] = Array.isArray(raw) ? raw : [];
     if (arr.length === 0) return getFallbackPlaylists();
     _playlistsCache = arr;

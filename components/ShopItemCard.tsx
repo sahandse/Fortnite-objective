@@ -36,8 +36,21 @@ export default function ShopItemCard({ item, isFavorite, onToggleFavorite }: Pro
   useEffect(() => {
     try {
       const s = localStorage.getItem("fn:usd_to_irt");
-      if (s) setUsdRate(parseInt(s, 10) || 90000);
+      if (s) {
+        const parsed = parseInt(s, 10);
+        if (parsed > 0) setUsdRate(parsed);
+      }
     } catch {}
+    fetch("https://open.er-api.com/v6/latest/USD")
+      .then((r) => r.json())
+      .then((data) => {
+        const rate = data?.rates?.IRR;
+        if (rate && rate > 0) {
+          setUsdRate(rate);
+          try { localStorage.setItem("fn:usd_to_irt", String(Math.round(rate))); } catch {}
+        }
+      })
+      .catch(() => {});
   }, []);
   const imageSrc = item.images.featured ?? item.images.icon ?? item.images.smallIcon;
   const emoji = TYPE_EMOJI[item.type] ?? "🎮";
@@ -52,14 +65,12 @@ export default function ShopItemCard({ item, isFavorite, onToggleFavorite }: Pro
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Rarity top accent line */}
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0, height: 2, zIndex: 2,
         background: `linear-gradient(90deg, ${rColor}cc, transparent)`,
         borderRadius: "14px 14px 0 0",
       }} />
 
-      {/* Image / placeholder */}
       {imageSrc ? (
         <>
           {imgState !== "ok" && (
@@ -79,7 +90,6 @@ export default function ShopItemCard({ item, isFavorite, onToggleFavorite }: Pro
               )}
             </div>
           )}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageSrc}
             alt={item.nameFa || item.name}
@@ -111,19 +121,16 @@ export default function ShopItemCard({ item, isFavorite, onToggleFavorite }: Pro
         </div>
       )}
 
-      {/* Gradient overlay */}
       <div style={{
         position: "absolute", inset: 0, zIndex: 1,
         background: "linear-gradient(to bottom, transparent 35%, rgba(3,5,14,0.97) 100%)",
       }} />
 
-      {/* Hover glow */}
       <div className="shop-card-glow" style={{
         boxShadow: `inset 0 0 35px ${rColor}22`,
         opacity: hovered ? 1 : 0,
       }} />
 
-      {/* Favorite button */}
       <button
         onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id); }}
         style={{
@@ -140,7 +147,6 @@ export default function ShopItemCard({ item, isFavorite, onToggleFavorite }: Pro
         {isFavorite ? "⭐" : "☆"}
       </button>
 
-      {/* Fortnite.gg link */}
       <a
         href={fortniteGgUrl(item.id)}
         target="_blank"
@@ -162,7 +168,6 @@ export default function ShopItemCard({ item, isFavorite, onToggleFavorite }: Pro
         🔗
       </a>
 
-      {/* Bundle badge */}
       {item.isBundle && (
         <span style={{
           position: "absolute", top: 8, left: 8, zIndex: 10,
@@ -174,7 +179,6 @@ export default function ShopItemCard({ item, isFavorite, onToggleFavorite }: Pro
         </span>
       )}
 
-      {/* Bottom info */}
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 2,
         padding: "8px 10px 10px",
