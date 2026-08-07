@@ -1,0 +1,44 @@
+{
+  "daily": {
+    "labelFa": "روزانه",
+    "labelEn": "Daily",
+    "color": "#22c55e",
+    "icon": "☀️"
+  },
+  "weekly": {
+    "labelFa": "هفتگی",
+    "labelEn": "Weekly",
+    "color": "#3b82f6",
+    "icon": "📅"
+  },
+  "story": {
+    "labelFa": "داستانی",
+    "labelEn": "Story",
+    "color": "#f59e0b",
+    "icon": "📖"
+  },
+  "battlepass": {
+    "labelFa": "پس رزمی",
+    "labelEn": "Battle Pass",
+    "color": "#8b5cf6",
+    "icon": "🏆"
+  },
+  "ranked": {
+    "labelFa": "رنک‌دار",
+    "labelEn": "Ranked",
+    "color": "#ef4444",
+    "icon": "🎯"
+  },
+  "event": {
+    "labelFa": "رویداد",
+    "labelEn": "Event",
+    "color": "#06b6d4",
+    "icon": "⭐"
+  },
+  "milestone": {
+    "labelFa": "نقطه عطف",
+    "labelEn": "Milestone",
+    "color": "#f97316",
+    "icon": "🎖️"
+  }
+}
